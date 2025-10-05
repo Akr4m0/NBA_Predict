@@ -51,21 +51,25 @@ class NBAPredictor:
             print(f"Error importing data: {str(e)}")
             return {"success": False, "error": str(e)}
     
-    def train_models(self, import_id: int, models: list = None) -> Dict[str, Any]:
+    def train_models(self, import_id: int, models: list = None, use_temporal_split: bool = False) -> Dict[str, Any]:
         """Train predictive models on imported data"""
         if models is None:
-            models = ['decision_tree', 'random_forest']
-        
+            models = ['decision_tree', 'random_forest', 'xgboost', 'baseline']
+
         results = {}
-        
+
         for model_type in models:
             try:
                 print(f"Training {model_type}...")
-                
+
                 if model_type == 'decision_tree':
-                    model_id, metrics = self.models.train_decision_tree(import_id)
+                    model_id, metrics = self.models.train_decision_tree(import_id, use_temporal_split=use_temporal_split)
                 elif model_type == 'random_forest':
-                    model_id, metrics = self.models.train_random_forest(import_id)
+                    model_id, metrics = self.models.train_random_forest(import_id, use_temporal_split=use_temporal_split)
+                elif model_type == 'xgboost':
+                    model_id, metrics = self.models.train_xgboost(import_id, use_temporal_split=use_temporal_split)
+                elif model_type == 'baseline':
+                    model_id, metrics = self.models.train_baseline(import_id, use_temporal_split=use_temporal_split)
                 else:
                     print(f"Unknown model type: {model_type}")
                     continue
@@ -171,10 +175,12 @@ def main():
     # Train command
     train_parser = subparsers.add_parser("train", help="Train predictive models")
     train_parser.add_argument("import_id", type=int, help="Import ID to train on")
-    train_parser.add_argument("--models", nargs="+", 
-                             choices=["decision_tree", "random_forest"],
-                             default=["decision_tree", "random_forest"],
+    train_parser.add_argument("--models", nargs="+",
+                             choices=["decision_tree", "random_forest", "xgboost", "baseline"],
+                             default=["decision_tree", "random_forest", "xgboost", "baseline"],
                              help="Models to train")
+    train_parser.add_argument("--temporal", action="store_true",
+                             help="Use temporal train/test split instead of random split")
     
     # Compare command
     compare_parser = subparsers.add_parser("compare", help="Compare model performance")
@@ -196,6 +202,8 @@ def main():
     auto_parser = subparsers.add_parser("auto", help="Import data and train all models")
     auto_parser.add_argument("file", help="Path to CSV or Excel file")
     auto_parser.add_argument("--description", help="Description of the dataset")
+    auto_parser.add_argument("--temporal", action="store_true",
+                            help="Use temporal train/test split instead of random split")
     
     args = parser.parse_args()
     
@@ -211,7 +219,7 @@ def main():
         predictor.import_data(args.file, args.description)
     
     elif args.command == "train":
-        predictor.train_models(args.import_id, args.models)
+        predictor.train_models(args.import_id, args.models, use_temporal_split=args.temporal)
     
     elif args.command == "compare":
         predictor.compare_models(args.import_id)
@@ -231,7 +239,7 @@ def main():
         if result["success"]:
             import_id = result["import_id"]
             # Train models
-            predictor.train_models(import_id)
+            predictor.train_models(import_id, use_temporal_split=args.temporal)
             # Compare results
             predictor.compare_models(import_id)
 

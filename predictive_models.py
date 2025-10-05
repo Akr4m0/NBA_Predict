@@ -5,15 +5,23 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report
+from sklearn.dummy import DummyClassifier
 from typing import Dict, Any, Tuple, List
 import json
 from database import NBADatabase
+try:
+    import xgboost as xgb
+    XGBOOST_AVAILABLE = True
+except ImportError:
+    XGBOOST_AVAILABLE = False
 
 class PredictiveModels:
     def __init__(self, db: NBADatabase):
         self.db = db
         self.label_encoders = {}
         self.scaler = StandardScaler()
+        self.feature_names = []
+        self.feature_importances = {}
         
     def prepare_features(self, df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series]:
         """
@@ -73,7 +81,10 @@ class PredictiveModels:
         
         # Fill missing values
         features = features.fillna(features.mean())
-        
+
+        # Store feature names for later use
+        self.feature_names = list(features.columns)
+
         return features, target
     
     def _extract_statistical_features(self, df: pd.DataFrame, features: pd.DataFrame) -> pd.DataFrame:
@@ -142,8 +153,52 @@ class PredictiveModels:
                     wins += 1
         
         return wins / total_games if total_games > 0 else 0.5
+
+    def temporal_train_test_split(self, df: pd.DataFrame, test_size: float = 0.2, date_column: str = 'game_date'):
+        """
+        Perform temporal train/test split based on date
+        Returns: (X_train, X_test, y_train, y_test)
+        """
+        # Ensure date column is datetime
+        df = df.copy()
+        df[date_column] = pd.to_datetime(df[date_column])
+
+        # Sort by date
+        df_sorted = df.sort_values(date_column)
+
+        # Prepare features
+        X, y = self.prepare_features(df_sorted)
+
+        # Calculate split index
+        split_idx = int(len(df_sorted) * (1 - test_size))
+
+        # Split temporally
+        X_train = X.iloc[:split_idx]
+        X_test = X.iloc[split_idx:]
+        y_train = y.iloc[:split_idx]
+        y_test = y.iloc[split_idx:]
+
+        return X_train, X_test, y_train, y_test
+
+    def get_feature_importance(self, model, model_name: str) -> pd.DataFrame:
+        """
+        Extract feature importance from a trained model
+        Returns: DataFrame with feature names and importance scores
+        """
+        if not hasattr(model, 'feature_importances_'):
+            return pd.DataFrame()
+
+        importance_df = pd.DataFrame({
+            'feature': self.feature_names,
+            'importance': model.feature_importances_
+        }).sort_values('importance', ascending=False)
+
+        # Store for later retrieval
+        self.feature_importances[model_name] = importance_df
+
+        return importance_df
     
-    def train_decision_tree(self, import_record_id: int, **params) -> Tuple[int, Dict[str, float]]:
+    def train_decision_tree(self, import_record_id: int, use_temporal_split: bool = False, **params) -> Tuple[int, Dict[str, float]]:
         """
         Train a decision tree model on the specified dataset
         Returns: (model_id, performance_metrics)
@@ -152,17 +207,21 @@ class PredictiveModels:
         df = self.db.get_game_data(import_record_id)
         if len(df) == 0:
             raise ValueError("No data found for the specified import record")
-        
-        # Prepare features
-        X, y = self.prepare_features(df)
-        
-        if y is None:
-            raise ValueError("No target variable could be created from the data")
-        
+
         # Split data
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42, stratify=y
-        )
+        if use_temporal_split and 'game_date' in df.columns:
+            X_train, X_test, y_train, y_test = self.temporal_train_test_split(df, test_size=0.2)
+        else:
+            # Prepare features
+            X, y = self.prepare_features(df)
+
+            if y is None:
+                raise ValueError("No target variable could be created from the data")
+
+            # Random split
+            X_train, X_test, y_train, y_test = train_test_split(
+                X, y, test_size=0.2, random_state=42, stratify=y
+            )
         
         # Train model
         model_params = {
@@ -185,7 +244,10 @@ class PredictiveModels:
             'recall': recall_score(y_test, y_pred, average='weighted', zero_division=0),
             'f1_score': f1_score(y_test, y_pred, average='weighted', zero_division=0)
         }
-        
+
+        # Get feature importance
+        importance_df = self.get_feature_importance(dt_model, f"DecisionTree_{import_record_id}")
+
         # Register model in database
         model_id = self.db.register_model(
             name=f"Decision Tree - Import {import_record_id}",
@@ -207,7 +269,7 @@ class PredictiveModels:
         
         return model_id, metrics
     
-    def train_random_forest(self, import_record_id: int, **params) -> Tuple[int, Dict[str, float]]:
+    def train_random_forest(self, import_record_id: int, use_temporal_split: bool = False, **params) -> Tuple[int, Dict[str, float]]:
         """
         Train a random forest model on the specified dataset
         Returns: (model_id, performance_metrics)
@@ -216,17 +278,21 @@ class PredictiveModels:
         df = self.db.get_game_data(import_record_id)
         if len(df) == 0:
             raise ValueError("No data found for the specified import record")
-        
-        # Prepare features
-        X, y = self.prepare_features(df)
-        
-        if y is None:
-            raise ValueError("No target variable could be created from the data")
-        
+
         # Split data
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42, stratify=y
-        )
+        if use_temporal_split and 'game_date' in df.columns:
+            X_train, X_test, y_train, y_test = self.temporal_train_test_split(df, test_size=0.2)
+        else:
+            # Prepare features
+            X, y = self.prepare_features(df)
+
+            if y is None:
+                raise ValueError("No target variable could be created from the data")
+
+            # Random split
+            X_train, X_test, y_train, y_test = train_test_split(
+                X, y, test_size=0.2, random_state=42, stratify=y
+            )
         
         # Train model
         model_params = {
@@ -250,11 +316,14 @@ class PredictiveModels:
             'recall': recall_score(y_test, y_pred, average='weighted', zero_division=0),
             'f1_score': f1_score(y_test, y_pred, average='weighted', zero_division=0)
         }
-        
+
+        # Get feature importance
+        importance_df = self.get_feature_importance(rf_model, f"RandomForest_{import_record_id}")
+
         # Register model in database
         model_id = self.db.register_model(
             name=f"Random Forest - Import {import_record_id}",
-            model_type="RandomForest", 
+            model_type="RandomForest",
             parameters=model_params
         )
         
@@ -271,7 +340,152 @@ class PredictiveModels:
         )
         
         return model_id, metrics
-    
+
+    def train_xgboost(self, import_record_id: int, use_temporal_split: bool = False, **params) -> Tuple[int, Dict[str, float]]:
+        """
+        Train an XGBoost model on the specified dataset
+        Returns: (model_id, performance_metrics)
+        """
+        if not XGBOOST_AVAILABLE:
+            raise ImportError("XGBoost is not installed. Please install it with: pip install xgboost")
+
+        # Get data
+        df = self.db.get_game_data(import_record_id)
+        if len(df) == 0:
+            raise ValueError("No data found for the specified import record")
+
+        # Split data
+        if use_temporal_split and 'game_date' in df.columns:
+            X_train, X_test, y_train, y_test = self.temporal_train_test_split(df, test_size=0.2)
+        else:
+            # Prepare features
+            X, y = self.prepare_features(df)
+
+            if y is None:
+                raise ValueError("No target variable could be created from the data")
+
+            # Random split
+            X_train, X_test, y_train, y_test = train_test_split(
+                X, y, test_size=0.2, random_state=42, stratify=y
+            )
+
+        # Train model
+        n_classes = len(np.unique(y_train))
+        model_params = {
+            'random_state': 42,
+            'n_estimators': params.get('n_estimators', 100),
+            'max_depth': params.get('max_depth', 6),
+            'learning_rate': params.get('learning_rate', 0.1),
+            'objective': 'multi:softprob' if n_classes > 2 else 'binary:logistic',
+            'eval_metric': 'mlogloss' if n_classes > 2 else 'logloss',
+            'base_score': 0.5
+        }
+
+        xgb_model = xgb.XGBClassifier(**model_params)
+        xgb_model.fit(X_train, y_train)
+
+        # Make predictions
+        y_pred = xgb_model.predict(X_test)
+
+        # Calculate metrics
+        metrics = {
+            'accuracy': accuracy_score(y_test, y_pred),
+            'precision': precision_score(y_test, y_pred, average='weighted', zero_division=0),
+            'recall': recall_score(y_test, y_pred, average='weighted', zero_division=0),
+            'f1_score': f1_score(y_test, y_pred, average='weighted', zero_division=0)
+        }
+
+        # Get feature importance
+        importance_df = self.get_feature_importance(xgb_model, f"XGBoost_{import_record_id}")
+
+        # Register model in database
+        model_id = self.db.register_model(
+            name=f"XGBoost - Import {import_record_id}",
+            model_type="XGBoost",
+            parameters=model_params
+        )
+
+        # Save results
+        self.db.save_prediction_results(
+            import_record_id=import_record_id,
+            model_id=model_id,
+            accuracy=metrics['accuracy'],
+            precision=metrics['precision'],
+            recall=metrics['recall'],
+            f1=metrics['f1_score'],
+            predictions=y_pred.tolist(),
+            actual_results=y_test.tolist()
+        )
+
+        return model_id, metrics
+
+    def train_baseline(self, import_record_id: int, use_temporal_split: bool = False, strategy: str = 'most_frequent') -> Tuple[int, Dict[str, float]]:
+        """
+        Train a baseline model (DummyClassifier) for comparison
+        strategy can be: 'most_frequent', 'stratified', 'uniform', 'constant'
+        Returns: (model_id, performance_metrics)
+        """
+        # Get data
+        df = self.db.get_game_data(import_record_id)
+        if len(df) == 0:
+            raise ValueError("No data found for the specified import record")
+
+        # Split data
+        if use_temporal_split and 'game_date' in df.columns:
+            X_train, X_test, y_train, y_test = self.temporal_train_test_split(df, test_size=0.2)
+        else:
+            # Prepare features
+            X, y = self.prepare_features(df)
+
+            if y is None:
+                raise ValueError("No target variable could be created from the data")
+
+            # Random split
+            X_train, X_test, y_train, y_test = train_test_split(
+                X, y, test_size=0.2, random_state=42, stratify=y
+            )
+
+        # Train baseline model
+        model_params = {
+            'strategy': strategy,
+            'random_state': 42
+        }
+
+        baseline_model = DummyClassifier(**model_params)
+        baseline_model.fit(X_train, y_train)
+
+        # Make predictions
+        y_pred = baseline_model.predict(X_test)
+
+        # Calculate metrics
+        metrics = {
+            'accuracy': accuracy_score(y_test, y_pred),
+            'precision': precision_score(y_test, y_pred, average='weighted', zero_division=0),
+            'recall': recall_score(y_test, y_pred, average='weighted', zero_division=0),
+            'f1_score': f1_score(y_test, y_pred, average='weighted', zero_division=0)
+        }
+
+        # Register model in database
+        model_id = self.db.register_model(
+            name=f"Baseline ({strategy}) - Import {import_record_id}",
+            model_type="Baseline",
+            parameters=model_params
+        )
+
+        # Save results
+        self.db.save_prediction_results(
+            import_record_id=import_record_id,
+            model_id=model_id,
+            accuracy=metrics['accuracy'],
+            precision=metrics['precision'],
+            recall=metrics['recall'],
+            f1=metrics['f1_score'],
+            predictions=y_pred.tolist(),
+            actual_results=y_test.tolist()
+        )
+
+        return model_id, metrics
+
     def get_model_comparison(self, import_record_id: int = None) -> pd.DataFrame:
         """Compare performance of all models"""
         results_df = self.db.get_prediction_results(import_record_id=import_record_id)
