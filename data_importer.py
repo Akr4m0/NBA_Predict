@@ -31,7 +31,7 @@ class DataImporter:
         
         # Clean and standardize data
         df = self._clean_data(df)
-        
+
         # Register import in database
         import_record_id = self.db.register_import(
             filename=filename,
@@ -39,9 +39,18 @@ class DataImporter:
             record_count=len(df),
             description=description
         )
-        
+
+        # Convert timestamps to strings before saving to database
+        df_to_save = df.copy()
+        if 'game_date' in df_to_save.columns:
+            # Convert to datetime if not already
+            if not pd.api.types.is_datetime64_any_dtype(df_to_save['game_date']):
+                df_to_save['game_date'] = pd.to_datetime(df_to_save['game_date'], errors='coerce')
+            # Convert to string format for SQLite
+            df_to_save['game_date'] = df_to_save['game_date'].dt.strftime('%Y-%m-%d')
+
         # Save game data to database
-        self.db.save_game_data(import_record_id, df)
+        self.db.save_game_data(import_record_id, df_to_save)
         
         return import_record_id, df
     
