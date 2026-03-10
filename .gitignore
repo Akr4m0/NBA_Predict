@@ -37,7 +37,11 @@ out/
 .claude/
 
 # CSV data files (if you don't want to commit data)
-# games.csv
+# data/games.csv
+# data/*.csv
+
+# Keep database structure but ignore data
+# data/nba_predictions.db
 
 # Environment variables
 .env

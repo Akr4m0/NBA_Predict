@@ -1,261 +1,451 @@
-# NBA Game Prediction Application
+# NBA Game Prediction System
 
-A comprehensive NBA game prediction system that allows you to import historical data, train machine learning models, compare their performance, and verify predictions against real results.
+> Machine Learning-powered NBA game prediction platform with professional analytics
 
-## Features
+A comprehensive full-stack application for predicting NBA game outcomes using advanced machine learning algorithms. Features a Python backend with multiple ML models and a modern React frontend with a dark, elegant design.
 
-### Core Functionality
-- **Historical Data Import**: Import NBA game data from CSV/Excel files
-- **Multiple ML Models**: Decision Tree and Random Forest classifiers
-- **Performance Evaluation**: Comprehensive metrics including accuracy, precision, recall, and F1-score
-- **Interactive Dashboard**: Web-based visualization and analysis tool
-- **Real Data Verification**: Compare predictions with actual game results
+![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![Python](https://img.shields.io/badge/python-3.8+-green.svg)
+![React](https://img.shields.io/badge/react-18.3-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
 
-### Data Management
-- SQLite database for storing imports, models, and results
-- Automatic data cleaning and feature engineering
-- Flexible data schema supporting various NBA data formats
-- Import tracking and metadata management
+---
 
-### Model Analysis
-- Cross-model performance comparison
-- Detailed statistical reports
-- Confusion matrix analysis
-- Feature importance insights
+## 🎯 Features
 
-## Installation
+### Backend (Python)
+- **Multiple ML Models**: Decision Tree, Random Forest, XGBoost, Baseline
+- **Data Import**: CSV/Excel file support with automatic cleaning
+- **Performance Evaluation**: Accuracy, Precision, Recall, F1-Score
+- **Interactive Dashboard**: Dash-based web visualization
+- **Prediction Verification**: Compare predictions with actual results
+- **CLI Interface**: Complete command-line tool
 
-1. **Clone/Download the project files**
-2. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+### Frontend (React)
+- **Modern UI**: Dark theme with glassmorphism effects
+- **9 Pages**: Home, Dashboard, Import, Train, Predictions, Analysis, Verify, About
+- **Responsive Design**: Mobile, tablet, and desktop support
+- **Smooth Animations**: Framer Motion throughout
+- **Data Visualization**: Recharts for performance charts
+- **Professional Design**: Subtle, elegant, Flashscore-inspired
 
-## Quick Start
+---
 
-### 1. Import Your NBA Data
-```bash
-python nba_predictor.py import "your_nba_data.csv" --description "2023 NBA Season"
+## 📁 Project Structure
+
+```
+NBA_Prediction_Decision_tree/
+├── backend/                  # Python ML backend
+│   ├── nba_predictor.py     # Main CLI application
+│   ├── database.py          # SQLite database operations
+│   ├── data_importer.py     # Data import and cleaning
+│   ├── predictive_models.py # ML models
+│   ├── performance_evaluator.py # Model evaluation
+│   ├── dashboard.py         # Dash dashboard
+│   ├── real_data_loader.py  # Verification
+│   ├── requirements.txt     # Python dependencies
+│   └── README.md            # Backend documentation
+│
+├── front/                    # React frontend
+│   ├── src/
+│   │   ├── pages/           # 9 page components
+│   │   ├── components/      # Reusable components
+│   │   ├── hooks/           # Custom hooks
+│   │   └── lib/             # Utilities
+│   ├── package.json         # Node dependencies
+│   ├── README.md            # Frontend documentation
+│   └── SETUP_GUIDE.md       # Setup instructions
+│
+├── data/                     # Data files and database
+│   ├── games.csv            # Sample NBA game data
+│   └── nba_predictions.db   # SQLite database
+│
+├── docs/                     # Documentation
+│   ├── PROJECT_DOCUMENTATION.txt  # Complete project docs
+│   ├── FRONTEND_REVIEW.md         # Frontend verification
+│   ├── DATABASE_SCHEMA.txt        # Database structure
+│   ├── INTEGRATION_SUMMARY.md     # Integration guide
+│   ├── NEW_FEATURES.md            # Feature documentation
+│   ├── PRESENTATION_CONTENT.txt   # Presentation material
+│   └── warnings_guide.md          # Development notes
+│
+├── .gitignore
+└── README.md                 # This file
 ```
 
-### 2. Train Models and Compare Results (All-in-One)
-```bash
-python nba_predictor.py auto "your_nba_data.csv" --description "2023 NBA Season"
-```
+---
 
-### 3. Launch Interactive Dashboard
-```bash
-python nba_predictor.py dashboard
-```
-Then visit http://localhost:8050 in your browser.
+## 🚀 Quick Start
 
-## Detailed Usage
-
-### Data Import
-
-The application accepts CSV or Excel files with NBA game data. Required columns:
-- `home_team` (or variations like "Home Team", "Home")
-- `away_team` (or variations like "Away Team", "Visitor") 
-- `game_date` (or variations like "Date", "Game Date")
-
-Optional but recommended columns:
-- `home_score`, `away_score` 
-- `season`
-- Team statistics (FG%, rebounds, assists, etc.)
+### Backend Setup
 
 ```bash
-# Import data
-python nba_predictor.py import "nba_games_2023.csv" --description "2023 Regular Season"
-```
+# 1. Navigate to backend
+cd backend
 
-### Model Training
+# 2. Install dependencies
+pip install -r requirements.txt
 
-Train specific models on imported data:
+# 3. Import data
+python nba_predictor.py import ../data/games.csv --description "NBA 2023 Season"
 
-```bash
-# Train all models (default)
+# 4. Train models
 python nba_predictor.py train 1
 
-# Train specific models
-python nba_predictor.py train 1 --models decision_tree
-python nba_predictor.py train 1 --models random_forest
+# 5. Launch dashboard
+python nba_predictor.py dashboard
 ```
 
-### Performance Analysis
+Visit: `http://localhost:8050`
+
+### Frontend Setup
 
 ```bash
-# Compare all models
+# 1. Navigate to frontend
+cd front
+
+# 2. Install dependencies
+npm install
+# or
+bun install
+
+# 3. Start development server
+npm run dev
+# or
+bun run dev
+```
+
+Visit: `http://localhost:8080`
+
+---
+
+## 📊 Usage Examples
+
+### Import NBA Data
+
+```bash
+cd backend
+python nba_predictor.py import ../data/games.csv --description "2023 Season"
+```
+
+### Train All Models
+
+```bash
+python nba_predictor.py train 1 --models decision_tree random_forest xgboost
+```
+
+### Compare Model Performance
+
+```bash
 python nba_predictor.py compare
-
-# Compare models for specific dataset
-python nba_predictor.py compare --import_id 1
-
-# Generate detailed report
-python nba_predictor.py report 1 --output "detailed_analysis.txt"
 ```
 
-### Real Data Verification
+### One-Command Workflow
 
-To verify your predictions against actual results:
-
-1. **Import real game results**:
-   ```bash
-   python nba_predictor.py import "real_results_2023.csv" --description "Actual 2023 Results"
-   ```
-
-2. **Use Python to compare** (interactive mode):
-   ```python
-   from nba_predictor import NBAPredictor
-   from real_data_loader import RealDataLoader
-   
-   predictor = NBAPredictor()
-   loader = RealDataLoader(predictor.db)
-   
-   # Compare predictions (import_id 1) with real results (import_id 2)
-   verification = loader.compare_predictions_with_reality(1, 2)
-   loader.generate_verification_report(verification)
-   ```
-
-### Dashboard Features
-
-The interactive dashboard provides:
-
-- **Overview**: Summary statistics and recent activity
-- **Model Comparison**: Visual performance comparisons 
-- **Dataset Analysis**: Detailed dataset information
-- **Detailed Results**: In-depth analysis for specific datasets
-
-Launch with:
 ```bash
-python nba_predictor.py dashboard --port 8080
+python nba_predictor.py auto ../data/games.csv --description "Quick Test"
 ```
 
-## Data Format Examples
+---
 
-### Basic CSV Format
-```csv
-home_team,away_team,game_date,home_score,away_score
-Lakers,Warriors,2023-01-15,112,108
-Heat,Celtics,2023-01-15,95,102
+## 🧠 Machine Learning Models
+
+### 1. Decision Tree Classifier
+- Interpretable decision paths
+- Feature importance analysis
+- Good baseline performance
+
+### 2. Random Forest Classifier
+- Ensemble of multiple trees
+- Higher accuracy and robustness
+- Reduced overfitting
+
+### 3. XGBoost (Gradient Boosting)
+- State-of-the-art performance
+- Advanced gradient boosting
+- Handles complex patterns
+
+### 4. Baseline Model
+- Simple majority predictor
+- Performance benchmark
+
+---
+
+## 📈 Feature Engineering
+
+The system automatically creates these features:
+
+- **Team Encoding**: Numerical representation of teams
+- **Temporal Features**: Month, day of week, day of year
+- **Season Features**: Season identifiers
+- **Statistical Features**: FG%, rebounds, assists, etc.
+- **Historical Features**: Win/loss records, streaks
+- **Score Features**: Point differentials
+- **Location Features**: Home/away advantages
+
+---
+
+## 🎨 Design System (Frontend)
+
+### Colors
+- **Background**: `#0a0f1c` (Deep navy)
+- **Primary Accent**: `#ff6b00` (Orange)
+- **Secondary Accent**: `#3b82f6` (Blue)
+- **Success**: `#10b981` (Green)
+- **Text**: `#ffffff` (White) with gray variants
+
+### Typography
+- Bold headings with wide tracking
+- Clean sans-serif body text
+- Monospace for data/statistics
+
+### Effects
+- Glassmorphism: `backdrop-blur-md bg-white/5`
+- Smooth animations: Framer Motion (0.3-0.6s)
+- Hover glows and scale effects
+- Gradient text accents
+
+---
+
+## 📦 Dependencies
+
+### Backend (Python)
+```
+pandas
+numpy
+scikit-learn
+xgboost
+dash
+plotly
+openpyxl
 ```
 
-### Advanced Format with Statistics
-```csv
-home_team,away_team,game_date,home_score,away_score,home_fg_pct,away_fg_pct,home_reb,away_reb
-Lakers,Warriors,2023-01-15,112,108,0.456,0.432,45,42
-Heat,Celtics,2023-01-15,95,102,0.398,0.478,38,51
+### Frontend (React)
+```
+react, react-dom, react-router-dom
+typescript
+vite
+tailwindcss
+framer-motion
+recharts
+lucide-react
+shadcn/ui components
+react-hook-form
+zod
 ```
 
-## Command Reference
+---
 
-### Main Commands
+## 🗄️ Database Schema
+
+SQLite database with 4 main tables:
+
+1. **import_records**: Track data imports
+2. **models**: Store trained model metadata
+3. **prediction_results**: Performance metrics
+4. **game_data**: Historical NBA games
+
+See `docs/DATABASE_SCHEMA.txt` for details.
+
+---
+
+## 📝 Available Commands (Backend)
 
 | Command | Description | Example |
 |---------|-------------|---------|
 | `import` | Import historical data | `python nba_predictor.py import data.csv` |
-| `train` | Train predictive models | `python nba_predictor.py train 1` |
-| `compare` | Compare model performance | `python nba_predictor.py compare` |
-| `list` | List imported datasets | `python nba_predictor.py list` |
-| `report` | Generate detailed report | `python nba_predictor.py report 1` |
-| `dashboard` | Launch web dashboard | `python nba_predictor.py dashboard` |
+| `train` | Train models | `python nba_predictor.py train 1` |
+| `compare` | Compare models | `python nba_predictor.py compare` |
+| `list` | List datasets | `python nba_predictor.py list` |
+| `report` | Generate report | `python nba_predictor.py report 1` |
+| `dashboard` | Launch dashboard | `python nba_predictor.py dashboard` |
 | `auto` | Import + train + compare | `python nba_predictor.py auto data.csv` |
-
-### Options
-
-- `--db`: Specify database file (default: `nba_predictions.db`)
-- `--description`: Add description to data import
-- `--models`: Choose specific models to train
-- `--import_id`: Filter by specific dataset
-- `--output`: Specify output file for reports
-- `--port`: Set dashboard port
-
-## File Structure
-
-```
-NBA_Prediction_Decision_tree/
-├── nba_predictor.py          # Main application and CLI
-├── database.py               # Database operations and schema
-├── data_importer.py          # Data import and cleaning
-├── predictive_models.py      # ML model implementations
-├── performance_evaluator.py  # Model evaluation and comparison
-├── dashboard.py              # Interactive web dashboard
-├── real_data_loader.py       # Real data verification
-├── requirements.txt          # Python dependencies
-└── README.md                # This file
-```
-
-## Model Details
-
-### Decision Tree Classifier
-- Interpretable model showing decision paths
-- Good for understanding feature importance
-- Default parameters optimized for NBA data
-
-### Random Forest Classifier  
-- Ensemble method combining multiple trees
-- Generally higher accuracy than single decision tree
-- Robust to overfitting
-
-### Feature Engineering
-The application automatically creates features from your data:
-- Team encoding (converts team names to numbers)
-- Date-based features (month, day of week, day of year)
-- Historical performance metrics
-- Statistical features from team stats
-- Home/away advantage indicators
-
-## Performance Metrics
-
-The application tracks multiple performance metrics:
-
-- **Accuracy**: Overall correct prediction rate
-- **Precision**: Positive predictive value
-- **Recall**: True positive rate  
-- **F1-Score**: Harmonic mean of precision and recall
-
-## Troubleshooting
-
-### Common Issues
-
-1. **"Missing required columns" error**
-   - Ensure your data has `home_team`, `away_team`, and `game_date` columns
-   - Check column name variations (the app tries to auto-map common variations)
-
-2. **"No data found" error**
-   - Verify the import was successful with `python nba_predictor.py list`
-   - Check that the import_id exists
-
-3. **Dashboard not loading**
-   - Ensure all dependencies are installed
-   - Try a different port: `python nba_predictor.py dashboard --port 8080`
-   - Check for firewall restrictions
-
-### Data Quality Tips
-
-- Ensure dates are in a recognizable format (YYYY-MM-DD, MM/DD/YYYY, etc.)
-- Remove or handle missing values in critical columns
-- Use consistent team name formatting
-- Include as many statistical features as possible for better predictions
-
-## Contributing
-
-This application is designed to be extensible. You can:
-- Add new machine learning models in `predictive_models.py`
-- Enhance feature engineering in the `prepare_features()` method
-- Add new visualization components to the dashboard
-- Extend the database schema for additional data types
-
-## License
-
-This project is open source. Feel free to modify and distribute according to your needs.
-
-## Support
-
-For issues or questions:
-1. Check this README for common solutions
-2. Review the command help: `python nba_predictor.py --help`
-3. Examine the generated log files and error messages
 
 ---
 
-**Happy Predicting!**
+## 🌐 Frontend Pages
+
+| Route | Page | Description |
+|-------|------|-------------|
+| `/` | Home | Hero section with features |
+| `/dashboard` | Dashboard | Main navigation hub |
+| `/import` | Import Data | Upload CSV/Excel files |
+| `/train` | Train Models | Configure and train ML models |
+| `/predictions` | Predictions | View game predictions |
+| `/analysis` | Analysis | Model performance charts |
+| `/verify` | Verification | Compare with actual results |
+| `/about` | About | Project information |
+
+---
+
+## 🔧 Configuration
+
+### Backend Configuration
+
+Default database location: `../data/nba_predictions.db`
+
+Override with:
+```bash
+python nba_predictor.py --db /custom/path/database.db
+```
+
+### Frontend Configuration
+
+Create `.env` file in `/front`:
+```env
+VITE_API_URL=http://localhost:5000
+VITE_DASHBOARD_URL=http://localhost:8050
+```
+
+---
+
+## 🚢 Deployment
+
+### Backend
+```bash
+cd backend
+pip install -r requirements.txt
+python nba_predictor.py dashboard --port 8050
+```
+
+### Frontend
+
+**Vercel:**
+```bash
+cd front
+npm run build
+vercel --prod
+```
+
+**Netlify:**
+```bash
+cd front
+npm run build
+# Deploy dist/ folder
+```
+
+**Docker:**
+```bash
+cd front
+docker build -t nba-prediction-frontend .
+docker run -p 8080:8080 nba-prediction-frontend
+```
+
+---
+
+## 📚 Documentation
+
+- **[Backend README](backend/README.md)** - Backend usage guide
+- **[Frontend README](front/README.md)** - Frontend documentation
+- **[Frontend Setup Guide](front/SETUP_GUIDE.md)** - Detailed setup
+- **[Project Documentation](docs/PROJECT_DOCUMENTATION.txt)** - Complete specs
+- **[Frontend Review](docs/FRONTEND_REVIEW.md)** - Verification report
+- **[Database Schema](docs/DATABASE_SCHEMA.txt)** - Database structure
+
+---
+
+## 🧪 Testing
+
+### Backend
+```bash
+cd backend
+python -m pytest  # If tests are added
+```
+
+### Frontend
+```bash
+cd front
+npm run test
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### Backend Issues
+
+**"ModuleNotFoundError"**
+```bash
+pip install -r requirements.txt
+```
+
+**"Database locked"**
+- Close other connections to the database
+- Ensure only one process is writing
+
+### Frontend Issues
+
+**Dependencies won't install**
+```bash
+npm cache clean --force
+rm package-lock.json
+npm install
+```
+
+**Port 8080 already in use**
+- Change port in `vite.config.ts` or:
+```bash
+npm run dev -- --port 3000
+```
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+---
+
+## 📄 License
+
+This project is open source and available under the MIT License.
+
+---
+
+## 🎯 Future Enhancements
+
+See `docs/PROJECT_DOCUMENTATION.txt` for comprehensive list of planned features:
+
+- Neural Networks & Deep Learning
+- Live game predictions
+- Player-level analysis
+- User accounts & profiles
+- Betting integration
+- Mobile app
+- Multi-sport expansion
+
+---
+
+## 📞 Support
+
+For issues or questions:
+- Check documentation in `/docs`
+- Review troubleshooting sections
+- Check backend/frontend README files
+
+---
+
+## ⚡ Performance
+
+- **Backend**: SQLite for fast queries
+- **Frontend**: Code splitting, lazy loading, optimized images
+- **Models**: Efficient feature engineering and caching
+
+---
+
+## 🔒 Security
+
+- No hardcoded credentials
+- Environment variables for sensitive data
+- Input validation on data import
+- CORS configuration for API
+
+---
+
+**Built with Python, React, and Machine Learning for professional NBA game predictions.**
+
+*Version 1.0.0 - January 2026*

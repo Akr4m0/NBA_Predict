@@ -1,0 +1,197 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* NBA Prediction System - Dark Sports Theme Design System */
+
+@layer base {
+  :root {
+    /* Primary Background: Deep navy/black */
+    --background: 222 47% 6%;
+    --foreground: 0 0% 100%;
+
+    /* Card/Panel: Slightly lighter navy for cards */
+    --card: 222 40% 8%;
+    --card-foreground: 0 0% 100%;
+
+    /* Popover */
+    --popover: 222 40% 8%;
+    --popover-foreground: 0 0% 100%;
+
+    /* Primary Accent: Warm orange */
+    --primary: 24 100% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary: Electric blue */
+    --secondary: 217 91% 60%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Muted: Dark gray for subtle elements */
+    --muted: 222 30% 12%;
+    --muted-foreground: 220 9% 60%;
+
+    /* Accent: Lighter orange glow */
+    --accent: 24 100% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Success: Vibrant green */
+    --success: 158 64% 52%;
+    --success-foreground: 0 0% 100%;
+
+    /* Warning: Amber */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 0%;
+
+    /* Destructive: Red */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Borders: Subtle white transparency */
+    --border: 220 20% 18%;
+    --input: 220 20% 18%;
+    --ring: 24 100% 50%;
+
+    --radius: 0.75rem;
+
+    /* Sidebar */
+    --sidebar-background: 222 40% 7%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 24 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 222 30% 12%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 220 20% 15%;
+    --sidebar-ring: 24 100% 50%;
+
+    /* Custom tokens for NBA theme */
+    --glass: 0 0% 100% / 0.05;
+    --glass-border: 0 0% 100% / 0.1;
+    --glass-hover: 0 0% 100% / 0.1;
+    --glow-orange: 0 0 40px hsl(24 100% 50% / 0.3);
+    --glow-blue: 0 0 40px hsl(217 91% 60% / 0.3);
+    --gradient-hero: linear-gradient(135deg, hsl(24 100% 50%), hsl(217 91% 60%));
+  }
+
+  /* Dark mode is default - no light mode needed */
+  .dark {
+    --background: 222 47% 6%;
+    --foreground: 0 0% 100%;
+    --card: 222 40% 8%;
+    --card-foreground: 0 0% 100%;
+    --popover: 222 40% 8%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 24 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217 91% 60%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 222 30% 12%;
+    --muted-foreground: 220 9% 60%;
+    --accent: 24 100% 55%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 20% 18%;
+    --input: 220 20% 18%;
+    --ring: 24 100% 50%;
+    --sidebar-background: 222 40% 7%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 24 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 222 30% 12%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 220 20% 15%;
+    --sidebar-ring: 24 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Custom scrollbar for dark theme */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-muted/30;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
+  }
+}
+
+@layer components {
+  /* Glassmorphism card effect */
+  .glass-card {
+    @apply bg-card/50 backdrop-blur-md border border-border/50 rounded-xl;
+  }
+
+  .glass-card-hover {
+    @apply glass-card transition-all duration-300 hover:bg-card/70 hover:border-primary/30 hover:shadow-lg;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
+  }
+
+  /* Glow effects */
+  .glow-orange {
+    box-shadow: var(--glow-orange);
+  }
+
+  .glow-blue {
+    box-shadow: var(--glow-blue);
+  }
+
+  /* Stats monospace */
+  .stats-text {
+    @apply font-mono tabular-nums;
+  }
+}
+
+@layer utilities {
+  /* Animation utilities */
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-pulse-slow {
+    animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  @keyframes glow {
+    from {
+      box-shadow: 0 0 20px hsl(24 100% 50% / 0.2);
+    }
+    to {
+      box-shadow: 0 0 40px hsl(24 100% 50% / 0.4);
+    }
+  }
+}
