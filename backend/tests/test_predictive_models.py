@@ -260,3 +260,29 @@ def test_training_pipeline_runs_end_to_end(db, sample_games_df, tmp_db_path):
     assert isinstance(model_id, int)
     assert "accuracy" in metrics
     assert 0.0 <= metrics["accuracy"] <= 1.0
+
+
+def test_load_model_falls_back_to_models_dir(db, sample_games_df):
+    """If model_path was stored as an absolute path on another host (e.g. trained
+    on the host, loaded inside a container), load_model resolves it by filename
+    under the current MODELS_DIR. Regression for the Docker portability bug."""
+    import os
+    import sqlite3
+
+    iid = db.register_import("g.csv", "/tmp/g.csv", record_count=len(sample_games_df))
+    df = sample_games_df.copy()
+    df["game_date"] = df["game_date"].dt.strftime("%Y-%m-%d")
+    db.save_game_data(iid, df)
+
+    pm = PredictiveModels(db=db)
+    model_id, _ = pm.train_baseline(iid, strategy="most_frequent")  # real .pkl in MODELS_DIR
+
+    # Rewrite the stored path to a bogus absolute path, keeping the filename.
+    row = db.get_model_by_id(model_id)
+    bogus = "/nonexistent/other/host/" + os.path.basename(row["model_path"])
+    with sqlite3.connect(db.db_path) as conn:
+        conn.execute("UPDATE models SET model_path = ? WHERE id = ?", (bogus, model_id))
+        conn.commit()
+
+    model, meta = pm.load_model(model_id)  # must still find it via MODELS_DIR/basename
+    assert model is not None

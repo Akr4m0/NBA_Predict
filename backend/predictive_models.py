@@ -759,6 +759,14 @@ class PredictiveModels:
             raise ValueError(f"No model found with id={model_id}")
 
         pkl_path = row.get('model_path')
+        # model_path may have been stored as an absolute path on a different host
+        # (e.g. trained on the host, then loaded inside a container where models
+        # live at MODELS_DIR). If the stored path is missing, resolve by filename
+        # under the current MODELS_DIR so models stay portable across machines.
+        if pkl_path and not os.path.exists(pkl_path):
+            candidate = MODELS_DIR / os.path.basename(pkl_path)
+            if candidate.exists():
+                pkl_path = str(candidate)
         if not pkl_path or not os.path.exists(pkl_path):
             raise FileNotFoundError(
                 f"Model file not found for model_id={model_id}: {pkl_path}"
