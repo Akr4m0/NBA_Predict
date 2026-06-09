@@ -1,0 +1,867 @@
+================================================================================
+NBA GAME PREDICTION SYSTEM - COMPREHENSIVE PROJECT DOCUMENTATION
+================================================================================
+
+PROJECT OVERVIEW
+================================================================================
+A full-stack NBA game prediction application that leverages machine learning
+to predict game outcomes. The system combines a Python backend with advanced
+ML algorithms and a modern Next.js frontend with a dark, sports-themed UI
+inspired by Flashscore.
+
+================================================================================
+CURRENT FUNCTIONALITIES
+================================================================================
+
+1. DATA IMPORT AND MANAGEMENT
+   ─────────────────────────────
+   • CSV/Excel file import for historical NBA game data
+   • Automatic data validation and cleaning
+   • Flexible schema supporting various NBA data formats
+   • Column name auto-mapping (handles variations like "Home Team", "home_team")
+   • SQLite database for persistent storage
+   • Import tracking with metadata (filename, date, record count, description)
+   • Data summary generation (date ranges, unique teams, game counts)
+
+   Backend: data_importer.py, database.py
+   Frontend: /import page with drag-and-drop interface
+
+2. MACHINE LEARNING MODELS
+   ─────────────────────────────
+   Current Available Models:
+
+   a) Decision Tree Classifier
+      • Interpretable decision paths
+      • Feature importance analysis
+      • Good for understanding prediction logic
+
+   b) Random Forest Classifier
+      • Ensemble of multiple decision trees
+      • Higher accuracy and robustness
+      • Reduced overfitting
+
+   c) XGBoost (Gradient Boosting)
+      • Advanced gradient boosting algorithm
+      • State-of-the-art performance
+      • Handles complex patterns
+
+   d) Baseline Model (Dummy Classifier)
+      • Simple majority class predictor
+      • Used as performance benchmark
+
+   Training Options:
+   • Random train/test split (default)
+   • Temporal split (chronological) for realistic evaluation
+   • Cross-validation support
+
+   Backend: predictive_models.py
+
+3. FEATURE ENGINEERING
+   ─────────────────────────────
+   Automatic feature extraction and creation:
+
+   • Team Encoding: Numerical representation of team names
+   • Temporal Features: Month, day of week, day of year
+   • Season Features: Season encoding
+   • Statistical Features: Team performance metrics (FG%, rebounds, assists)
+   • Historical Features: Win/loss records, recent performance
+   • Score-based Features: Point differentials
+   • Home/Away Advantages: Location-based patterns
+
+   All features are automatically normalized and missing values imputed.
+
+   Backend: predictive_models.py (prepare_features method)
+
+4. PERFORMANCE EVALUATION
+   ─────────────────────────────
+   Comprehensive model assessment:
+
+   Metrics Tracked:
+   • Accuracy: Overall correct prediction rate
+   • Precision: Positive predictive value
+   • Recall: True positive rate (sensitivity)
+   • F1-Score: Harmonic mean of precision and recall
+   • Confusion Matrix: Detailed prediction breakdown
+   • Feature Importance: Impact of each feature on predictions
+
+   Analysis Features:
+   • Cross-model comparison
+   • Dataset-specific performance
+   • Detailed statistical reports
+   • Performance visualization
+
+   Backend: performance_evaluator.py
+
+5. PREDICTION VERIFICATION
+   ─────────────────────────────
+   Compare predictions against actual game results:
+
+   • Import real game results
+   • Match predictions with actual outcomes
+   • Accuracy verification
+   • Discrepancy identification
+   • Verification report generation
+
+   Backend: real_data_loader.py
+
+6. INTERACTIVE DASHBOARD (Python/Dash)
+   ─────────────────────────────
+   Web-based data visualization:
+
+   Tabs:
+   • Overview: Summary statistics, best models, recent activity
+   • Model Comparison: Visual performance comparisons, metric selection
+   • Dataset Analysis: Detailed dataset information and statistics
+   • Detailed Results: In-depth analysis for specific datasets
+
+   Features:
+   • Real-time data updates
+   • Interactive charts (Plotly)
+   • Sortable tables
+   • Metric filtering
+   • Model performance tracking
+
+   Backend: dashboard.py (Dash framework, runs on localhost:8050)
+
+7. NEXT.JS FRONTEND
+   ─────────────────────────────
+   Modern web interface with dark Flashscore-inspired theme:
+
+   Current Pages:
+   • Home (/) - Hero section with gradient effects
+   • Dashboard (/dashboard) - Overview and navigation hub
+   • Import (/import) - Data upload interface
+   • Train (/train) - Model training interface
+   • Analysis (/analysis) - Results analysis
+   • Verify (/verify) - Prediction verification
+   • About (/about) - Project information
+
+   Design Features:
+   • Dark navy/black background (#0a0f1c)
+   • Orange accent colors (#ff6b00, #ff8533)
+   • Glassmorphism effects (backdrop-blur, translucent cards)
+   • Smooth animations (Framer Motion)
+   • Responsive grid layouts
+   • Interactive hover effects
+   • Gradient text and borders
+
+   Tech Stack:
+   • Next.js 14 (App Router)
+   • TypeScript
+   • Tailwind CSS
+   • Framer Motion (animations)
+   • Lucide Icons
+
+8. DATABASE SCHEMA
+   ─────────────────────────────
+   SQLite database with 4 main tables:
+
+   • import_records: Track data imports
+   • models: Store trained model metadata
+   • prediction_results: Performance metrics and predictions
+   • game_data: Historical NBA game information
+
+   Backend: database.py
+
+9. COMMAND-LINE INTERFACE
+   ─────────────────────────────
+   Full CLI for all operations:
+
+   Commands:
+   • import: Import historical data
+   • train: Train specific models
+   • compare: Compare model performance
+   • list: List imported datasets
+   • report: Generate detailed reports
+   • dashboard: Launch Dash dashboard
+   • auto: One-command import + train + compare
+
+   Backend: nba_predictor.py (argparse-based CLI)
+
+================================================================================
+FUTURE POSSIBLE FUNCTIONALITIES
+================================================================================
+
+PHASE 1: ENHANCED MACHINE LEARNING
+─────────────────────────────
+1. Additional ML Models
+   • Neural Networks (TensorFlow/PyTorch)
+   • Support Vector Machines (SVM)
+   • Logistic Regression
+   • Ensemble Stacking (combine multiple models)
+   • Deep Learning with LSTM for time series
+
+2. Advanced Feature Engineering
+   • Player-level statistics integration
+   • Team momentum indicators (winning/losing streaks)
+   • Head-to-head historical matchup analysis
+   • Injury reports and roster changes
+   • Rest days between games
+   • Travel distance for away games
+   • Playoff vs. regular season indicators
+
+3. Hyperparameter Optimization
+   • Grid search for optimal parameters
+   • Bayesian optimization
+   • AutoML integration
+   • Model versioning and experiment tracking
+
+PHASE 2: LIVE PREDICTIONS
+─────────────────────────────
+4. Real-Time Game Predictions
+   • API integration with NBA stats providers
+   • Live odds and betting lines integration
+   • Pre-game prediction generation
+   • In-game prediction updates
+   • Next 7 days game predictions
+
+5. Automated Data Pipeline
+   • Scheduled data fetching (daily/weekly)
+   • Automatic model retraining
+   • Performance drift detection
+   • Automatic feature updates
+
+PHASE 3: ADVANCED ANALYTICS
+─────────────────────────────
+6. Player Impact Analysis
+   • Individual player prediction contribution
+   • Lineup combination effectiveness
+   • Star player absence impact
+   • Rookie vs. veteran analysis
+
+7. Advanced Visualizations
+   • Win probability charts
+   • Prediction confidence intervals
+   • Team strength radar charts
+   • Historical trend analysis
+   • Interactive game timelines
+   • Heatmaps for home/away performance
+
+8. Statistical Deep Dives
+   • SHAP (SHapley Additive exPlanations) for model interpretability
+   • Partial dependence plots
+   • Correlation analysis dashboards
+   • What-if scenario analysis
+
+PHASE 4: USER FEATURES
+─────────────────────────────
+9. User Accounts and Profiles
+   • User authentication (JWT/OAuth)
+   • Personal prediction history
+   • Favorite teams tracking
+   • Custom model configurations
+   • Saved prediction sets
+
+10. Interactive Prediction Builder
+    • Custom feature selection
+    • User-defined weight adjustments
+    • Manual override capabilities
+    • Prediction explanation tooltips
+
+11. Betting Integration
+    • Odds comparison
+    • Expected value calculations
+    • Betting recommendation engine
+    • Win/loss tracking for hypothetical bets
+    • ROI analytics
+
+PHASE 5: SOCIAL AND SHARING
+─────────────────────────────
+12. Community Features
+    • Prediction leaderboards
+    • User prediction sharing
+    • Discussion forums
+    • Expert picks integration
+    • Prediction contests
+
+13. Export and Reporting
+    • PDF report generation
+    • Excel export of predictions
+    • Automated email reports
+    • API endpoints for third-party access
+    • Webhook notifications
+
+PHASE 6: MOBILE AND ACCESSIBILITY
+─────────────────────────────
+14. Mobile Application
+    • React Native mobile app
+    • Push notifications for predictions
+    • Mobile-optimized interface
+    • Offline mode with cached predictions
+
+15. Accessibility Enhancements
+    • Screen reader optimization
+    • Keyboard navigation
+    • High contrast mode
+    • Multi-language support
+
+PHASE 7: ADVANCED INTEGRATIONS
+─────────────────────────────
+16. External Data Sources
+    • Weather data integration
+    • Social media sentiment analysis
+    • News and media coverage impact
+    • Referee assignment effects
+    • Arena and crowd factor analysis
+
+17. Multi-Sport Expansion
+    • NFL prediction models
+    • MLB prediction models
+    • NHL prediction models
+    • International basketball leagues
+    • College basketball
+
+================================================================================
+LOVABLE AI DESIGN PROMPT FOR FRONTEND PAGES
+================================================================================
+
+PROJECT CONTEXT:
+You are building a modern, professional NBA game prediction web application.
+The design should be subtle, elegant, and sophisticated while maintaining a
+sports-focused aesthetic. Think high-end sports analytics platform, not flashy
+gambling site.
+
+DESIGN SYSTEM REQUIREMENTS:
+
+COLOR PALETTE:
+─────────────
+• Primary Background: Deep navy/black (#0a0f1c, #0d1117, #111827)
+• Secondary Background: Slightly lighter navy (#1a1f2e, #1f2937)
+• Card/Panel Background: Translucent white/glass effect (rgba(255,255,255,0.03-0.08))
+• Primary Accent: Warm orange (#ff6b00, #f97316, #ff8533)
+• Secondary Accent: Electric blue (#3b82f6, #60a5fa)
+• Success: Vibrant green (#10b981, #22c55e)
+• Warning: Amber (#f59e0b, #fbbf24)
+• Error: Red (#ef4444, #dc2626)
+• Text Primary: Pure white (#ffffff)
+• Text Secondary: Light gray (#9ca3af, #d1d5db)
+• Text Tertiary: Medium gray (#6b7280, #4b5563)
+• Borders: Subtle white with transparency (rgba(255,255,255,0.1-0.15))
+
+TYPOGRAPHY:
+─────────────
+• Headings: Bold, wide letter-spacing (tracking-wide, tracking-wider)
+• Body: Clean, readable sans-serif
+• Monospace for data/stats: Use for numbers, scores, percentages
+• Font Sizes:
+  - Page Titles: text-4xl to text-5xl (2.25rem - 3rem)
+  - Section Headings: text-2xl to text-3xl (1.5rem - 1.875rem)
+  - Card Titles: text-xl (1.25rem)
+  - Body Text: text-base (1rem)
+  - Small Text: text-sm (0.875rem)
+
+LAYOUT PRINCIPLES:
+─────────────
+• Container max-width: 1400px (container mx-auto px-4)
+• Consistent spacing scale (4px base: space-4, space-6, space-8, space-12)
+• Grid layouts for data (2-3 columns on desktop, 1 on mobile)
+• Generous padding in cards (p-6, p-8)
+• Breathing room between sections (mb-8, mb-12)
+• Responsive breakpoints: mobile-first, md (768px), lg (1024px), xl (1280px)
+
+COMPONENT STYLING:
+─────────────
+
+1. Cards/Panels:
+   • Glassmorphism effect: backdrop-blur-md bg-white/5
+   • Subtle border: border border-white/10
+   • Rounded corners: rounded-xl or rounded-2xl
+   • Hover effect: hover:bg-white/10 hover:border-accent/50
+   • Smooth transitions: transition-all duration-300
+   • Optional shadow on hover: hover:shadow-xl hover:shadow-accent/20
+
+2. Buttons:
+   • Primary: bg-orange-500 hover:bg-orange-400 text-white font-semibold
+   • Secondary: border border-white/20 hover:bg-white/10 text-white
+   • Ghost: hover:bg-white/5 text-gray-300
+   • Sizes: py-2 px-4 (small), py-3 px-6 (medium), py-4 px-8 (large)
+   • Rounded: rounded-lg
+   • Icons: Include lucide-react icons with consistent sizing
+
+3. Input Fields:
+   • Background: bg-white/5
+   • Border: border border-white/10 focus:border-orange-500
+   • Text: text-white placeholder-gray-500
+   • Padding: px-4 py-3
+   • Focus state: focus:outline-none focus:ring-2 focus:ring-orange-500/50
+
+4. Tables/Data Grids:
+   • Header: bg-white/5 text-white font-semibold
+   • Rows: border-b border-white/10 hover:bg-white/5
+   • Alternating rows: even:bg-white/3
+   • Text alignment: Left for text, right for numbers
+   • Monospace for numerical data
+
+5. Charts/Visualizations:
+   • Dark theme palette
+   • Orange/blue/green accent colors
+   • Transparent backgrounds
+   • Grid lines: rgba(255,255,255,0.1)
+   • Tooltips: dark background with white text
+
+ANIMATIONS:
+─────────────
+Use Framer Motion for all animations:
+
+• Page transitions: initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+• Stagger children: transition={{ delay: i * 0.1 }}
+• Hover interactions: whileHover={{ scale: 1.02, y: -4 }}
+• Loading states: Spinner or skeleton loaders
+• Smooth duration: 0.3s - 0.6s
+• Easing: ease-in-out or custom cubic-bezier
+
+SPECIAL EFFECTS:
+─────────────
+• Background gradients: Subtle radial gradients for depth
+• Glow effects on hover: Orange/blue glow around important elements
+• Parallax scrolling: For hero sections
+• Gradient text: bg-gradient-to-r from-orange-500 to-blue-500 bg-clip-text text-transparent
+• SVG patterns or noise textures for subtle background interest
+
+================================================================================
+PAGE-BY-PAGE DESIGN SPECIFICATIONS
+================================================================================
+
+PAGE 1: HOME (/) - Landing Page
+─────────────────────────────────
+Purpose: First impression, value proposition, call-to-action
+
+Layout:
+• Hero section with large headline
+• Animated gradient background or subtle particle effect
+• CTA buttons: "Get Started" (orange), "View Demo" (outline)
+• Feature highlights (3-4 cards in grid)
+• Stats ticker: "X predictions made", "Y% accuracy", "Z models trained"
+• Footer with links
+
+Key Elements:
+• Large hero title: "Predict NBA Games with Machine Learning Precision"
+• Subtitle: Explain the value proposition concisely
+• Animated NBA-themed icons or graphics
+• Smooth scroll to sections
+• Video or animated preview of dashboard
+
+Visual Hierarchy:
+1. Hero headline (text-6xl, bold, gradient text)
+2. Subtitle (text-xl, text-gray-400)
+3. CTA buttons (large, prominent)
+4. Feature cards (equal size, icon + title + description)
+5. Social proof or testimonials
+
+PAGE 2: DASHBOARD (/dashboard) - Main Hub
+─────────────────────────────────
+Purpose: Overview, navigation, quick stats
+
+Layout:
+• Top stats bar (3-4 key metrics in cards)
+• Navigation cards grid (2x3 or 3x3)
+• Recent activity section (table or list)
+• Quick actions panel
+• Charts: Accuracy trend, model performance comparison
+
+Key Elements:
+• Large metric cards with icon, value, label
+• Navigation cards with hover effects and icons:
+  - Import Data (Upload icon)
+  - Train Models (Brain/CPU icon)
+  - View Predictions (Chart icon)
+  - Analysis (Graph icon)
+  - Verification (Check icon)
+  - Settings (Gear icon)
+• Live updating stats if connected to backend
+• Quick search or filter bar
+
+Visual Hierarchy:
+1. Stats bar (prominent numbers with context)
+2. Navigation grid (equal prominence)
+3. Activity feed (secondary, scrollable)
+4. Charts (tertiary, expandable)
+
+PAGE 3: IMPORT DATA (/import) - Data Upload
+─────────────────────────────────
+Purpose: Upload CSV/Excel files, configure import settings
+
+Layout:
+• Upload dropzone (large, centered)
+• File format requirements panel
+• Dataset description input
+• Preview table (after file selected)
+• Import history list
+• Progress indicator during upload
+
+Key Elements:
+• Drag-and-drop zone with dashed border
+• File icon (FileSpreadsheet from lucide)
+• Supported formats badge (CSV, XLSX, XLS)
+• Column mapping interface (if auto-mapping fails)
+• Success/error notifications
+• Sample data template download link
+
+Visual Hierarchy:
+1. Upload dropzone (largest, central)
+2. Format requirements (sidebar or below)
+3. Description input (below dropzone)
+4. Import button (CTA)
+5. History (bottom section)
+
+Interactions:
+• File drag hover state
+• Upload progress bar
+• Success animation on completion
+• Error messages with retry option
+
+PAGE 4: TRAIN MODELS (/train) - Model Training
+─────────────────────────────────
+Purpose: Select dataset, choose models, configure training, monitor progress
+
+Layout:
+• Dataset selector (dropdown or cards)
+• Model selection (checkboxes or toggle cards)
+• Training options panel (temporal split, cross-validation)
+• Parameter configuration (expandable for advanced users)
+• Training status/progress section
+• Trained models history
+
+Key Elements:
+• Dataset cards with metadata (games, date range, teams)
+• Model cards with icons and descriptions:
+  - Decision Tree (Tree icon)
+  - Random Forest (Forest/Trees icon)
+  - XGBoost (Zap/Lightning icon)
+  - Neural Network (Brain icon)
+• Toggle switches for training options
+• Parameter sliders or inputs
+• Real-time training logs (console-style)
+• Progress bar with ETA
+• Model performance preview after training
+
+Visual Hierarchy:
+1. Dataset selection (top)
+2. Model selection grid (prominent)
+3. Options panel (collapsible)
+4. Start Training button (large CTA)
+5. Progress/logs (appears after training starts)
+
+Interactions:
+• Model info tooltips on hover
+• Collapsible advanced options
+• Live progress updates via WebSocket or polling
+• Success notification with metrics preview
+• Navigate to results button
+
+PAGE 5: PREDICTIONS (/predictions) - View and Manage Predictions
+─────────────────────────────────
+Purpose: View generated predictions, upcoming games, confidence scores
+
+Layout:
+• Filter bar (date range, team, model)
+• Upcoming games list (card layout)
+• Past predictions table (sortable)
+• Prediction detail modal/sidebar
+• Confidence distribution chart
+
+Key Elements:
+• Game cards with:
+  - Team logos/names
+  - Prediction result (Home Win / Away Win)
+  - Confidence percentage (progress bar)
+  - Odds comparison (if available)
+  - Model used
+  - Date and time
+• Color-coded confidence levels:
+  - High confidence (green): >70%
+  - Medium confidence (amber): 50-70%
+  - Low confidence (red): <50%
+• Export predictions button
+• Refresh/Generate new predictions
+
+Visual Hierarchy:
+1. Filter controls (sticky top bar)
+2. Upcoming games (card grid, prominent)
+3. Past predictions table (secondary)
+4. Charts/stats (sidebar or bottom)
+
+Interactions:
+• Click card to expand details
+• Hover for quick stats tooltip
+• Real-time updates for live games
+• Filter animations
+• Export to CSV/PDF
+
+PAGE 6: ANALYSIS (/analysis) - Performance Analysis
+─────────────────────────────────
+Purpose: Compare models, view metrics, analyze performance
+
+Layout:
+• Model comparison table
+• Performance charts (accuracy, F1, precision, recall)
+• Confusion matrix visualization
+• Feature importance chart
+• Time-based performance trend
+• Dataset selector and filters
+
+Key Elements:
+• Model comparison cards with metrics
+• Interactive bar/line charts (Chart.js or Recharts)
+• Heatmap for confusion matrix
+• Feature importance horizontal bar chart
+• Metric selector (radio buttons or tabs)
+• Date range selector
+• Best model highlight badge
+
+Visual Hierarchy:
+1. Model comparison cards (top, horizontal scroll)
+2. Main chart area (large, central)
+3. Secondary charts (grid below)
+4. Detailed metrics table (expandable)
+
+Interactions:
+• Toggle between chart types
+• Hover for detailed tooltips
+• Click model to filter charts
+• Expand/collapse sections
+• Export charts as images
+
+PAGE 7: VERIFICATION (/verify) - Prediction Verification
+─────────────────────────────────
+Purpose: Compare predictions with actual results, measure accuracy
+
+Layout:
+• Prediction set selector
+• Actual results upload section
+• Verification status cards
+• Comparison table (predicted vs. actual)
+• Accuracy metrics dashboard
+• Discrepancy highlights
+
+Key Elements:
+• Upload actual results (similar to import page)
+• Match status indicators:
+  - Correct (green check)
+  - Incorrect (red X)
+  - Pending (gray clock)
+• Accuracy breakdown by:
+  - Model
+  - Team
+  - Date range
+  - Home/Away
+• Visual diff for predicted vs. actual
+• Verification report download
+
+Visual Hierarchy:
+1. Selector controls (top)
+2. Status cards (metrics)
+3. Comparison table (main area)
+4. Charts (accuracy trends)
+
+Interactions:
+• Auto-match predictions with results
+• Manual override for matches
+• Filter to show only mismatches
+• Generate detailed report
+
+PAGE 8: SETTINGS (/settings) - Configuration
+─────────────────────────────────
+Purpose: User preferences, API keys, model defaults, notifications
+
+Layout:
+• Tabbed sections (Profile, Models, Integrations, Notifications)
+• Form fields with labels
+• Save changes button (sticky footer)
+• Reset to defaults option
+
+Key Elements:
+• Profile section: Name, email, avatar
+• Model defaults: Preferred models, training parameters
+• API integrations: NBA stats API key, betting odds API
+• Notifications: Email alerts, prediction reminders
+• Theme customization (dark/light toggle, accent color)
+• Data management: Export data, delete account
+
+Visual Hierarchy:
+1. Tab navigation (top)
+2. Form sections (card-based)
+3. Save button (bottom, sticky)
+
+Interactions:
+• Auto-save with success toast
+• Validation errors inline
+• Confirm dialogs for destructive actions
+
+PAGE 9: ABOUT (/about) - Project Information
+─────────────────────────────────
+Purpose: Explain methodology, team, technology stack
+
+Layout:
+• Hero section with project description
+• How it works (step-by-step with icons)
+• Technology stack (card grid with logos)
+• Team section (optional)
+• FAQ accordion
+• Contact form or links
+
+Key Elements:
+• Methodology explanation with visuals
+• ML model descriptions
+• Tech stack badges with hover details
+• Flowchart or diagram of prediction pipeline
+• Open source credits
+• Social links or GitHub repo
+
+Visual Hierarchy:
+1. Intro/hero (engaging description)
+2. How it works (visual steps)
+3. Tech stack (grid)
+4. FAQ (expandable)
+
+PAGE 10: MODEL DETAILS (/models/[id]) - Individual Model Page
+─────────────────────────────────
+Purpose: Deep dive into specific model performance
+
+Layout:
+• Model header (name, type, created date)
+• Key metrics cards
+• Training details panel
+• Performance charts
+• Feature importance breakdown
+• Predictions made with this model
+• Retrain or delete actions
+
+Key Elements:
+• Model metadata (parameters, dataset used)
+• Accuracy over time chart
+• Confusion matrix
+• ROC curve (if applicable)
+• Top features list with weights
+• Recent predictions table
+• Compare with other models button
+
+Visual Hierarchy:
+1. Model header (name, badge)
+2. Metrics cards (top row)
+3. Charts (main area, 2-column grid)
+4. Predictions table (bottom)
+
+RESPONSIVE DESIGN NOTES:
+─────────────────────────────────
+• Mobile: Single column layout, stacked cards
+• Tablet: 2-column grids
+• Desktop: 3-column grids, sidebars
+• Touch-friendly buttons (min 44px height)
+• Hamburger menu for mobile navigation
+• Swipeable carousels on mobile
+• Fixed headers on scroll
+
+ACCESSIBILITY REQUIREMENTS:
+─────────────────────────────────
+• ARIA labels on all interactive elements
+• Keyboard navigation support (Tab, Enter, Esc)
+• Focus indicators (orange outline)
+• Alt text for all images/icons
+• Semantic HTML (header, nav, main, section, article)
+• Sufficient color contrast (WCAG AA minimum)
+• Screen reader announcements for dynamic updates
+
+PERFORMANCE OPTIMIZATIONS:
+─────────────────────────────────
+• Lazy loading for charts and heavy components
+• Image optimization (Next.js Image component)
+• Code splitting by route
+• Prefetch navigation links
+• Virtualized lists for large datasets
+• Debounced search inputs
+• Skeleton loaders for async data
+
+CONSISTENCY CHECKLIST:
+─────────────────────────────────
+✓ All pages use same color palette
+✓ Consistent spacing scale throughout
+✓ Icons from same library (lucide-react)
+✓ Animation timings match (0.3s default)
+✓ Button styles consistent across pages
+✓ Card styles uniform (glassmorphism)
+✓ Typography scale adhered to
+✓ Hover effects similar across components
+✓ Loading states visually consistent
+
+================================================================================
+IMPLEMENTATION NOTES FOR LOVABLE AI
+================================================================================
+
+When implementing these designs, please:
+
+1. Use Tailwind CSS utility classes for all styling (no custom CSS unless absolutely necessary)
+
+2. Implement dark mode as default (no toggle initially, can add later)
+
+3. Use Framer Motion for all animations and page transitions
+
+4. Install and use these packages:
+   - lucide-react (for icons)
+   - recharts or chart.js (for data visualization)
+   - react-hook-form (for forms)
+   - zod (for validation)
+   - date-fns (for date formatting)
+
+5. Create reusable components:
+   - MetricCard (for displaying stats)
+   - DataTable (sortable, filterable table)
+   - ModelCard (for model selection/display)
+   - PredictionCard (for game predictions)
+   - Button variants (primary, secondary, ghost, danger)
+   - Input variants (text, select, file upload)
+
+6. Implement proper TypeScript types for all props and data structures
+
+7. Use Next.js App Router conventions (Server Components where possible)
+
+8. Add loading.tsx and error.tsx for each route
+
+9. Implement proper form validation with error messages
+
+10. Add toast notifications for user actions (success, error, info)
+
+11. Ensure mobile responsiveness from the start (mobile-first approach)
+
+12. Add subtle micro-interactions (button press effects, input focus, card hover)
+
+13. Use CSS Grid for page layouts, Flexbox for component layouts
+
+14. Implement skeleton loaders for async content
+
+15. Add proper meta tags and OpenGraph data for SEO
+
+16. Create a cohesive design system in a globals.css or theme config
+
+17. Ensure all interactive elements have hover and focus states
+
+18. Add proper ARIA attributes for accessibility
+
+19. Optimize images with Next.js Image component
+
+20. Implement proper error boundaries
+
+FINAL DESIGN PHILOSOPHY:
+─────────────────────────────────
+The design should feel like a professional sports analytics platform used by
+NBA teams or serious analysts. It should be:
+
+• SOPHISTICATED - Clean, minimal, modern
+• CONFIDENT - Bold typography, clear hierarchy
+• DATA-FOCUSED - Charts and metrics take center stage
+• ELEGANT - Subtle animations, refined details
+• TRUSTWORTHY - Professional color scheme, reliable feel
+• IMMERSIVE - Dark theme for focus, subtle depth effects
+
+Avoid:
+• Overly bright colors or neon effects
+• Cluttered layouts or too much information at once
+• Cheesy sports clichés or gimmicky animations
+• Gambling aesthetics (flashy, urgent, aggressive)
+• Comic Sans or playful fonts
+
+Remember: Less is more. White space is your friend. Let the data shine.
+
+================================================================================
+END OF DOCUMENTATION
+================================================================================

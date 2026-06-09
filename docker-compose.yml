@@ -1,0 +1,33 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    image: nba-predict-backend
+    container_name: nba-predict-backend
+    environment:
+      # Set NBA_API_KEY in your shell or .env to require X-API-Key on mutating endpoints.
+      NBA_API_KEY: ${NBA_API_KEY:-}
+      NBA_CORS_ORIGINS: ${NBA_CORS_ORIGINS:-http://localhost:8080}
+      # balldontlie key for the data-freshness pipeline (free tier = scores only).
+      BALLDONTLIE_API_KEY: ${BALLDONTLIE_API_KEY:-}
+    ports:
+      - "8000:8000"
+    volumes:
+      # Persist DB, uploaded files, and trained model pickles across container restarts.
+      - ./data:/data
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./front
+      args:
+        # Point the SPA at the backend container's published port.
+        # For prod, override to your public API URL.
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
+    image: nba-predict-frontend
+    container_name: nba-predict-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped

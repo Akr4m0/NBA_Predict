@@ -1,0 +1,663 @@
+NBA PREDICTION SYSTEM - DATABASE SCHEMA
+========================================
+SQLite Database Structure and SQL Scripts
+
+================================================================================
+DATABASE OVERVIEW
+================================================================================
+
+Database Name: nba_predictions.db
+Database Type: SQLite 3
+Purpose: Store NBA game data, trained models, predictions, and performance metrics
+
+Key Features:
+• Relational database design
+• Foreign key constraints for data integrity
+• Indexes for query optimization
+• Timestamps for audit trails
+• Support for multiple seasons and datasets
+
+================================================================================
+TABLE 1: TEAMS
+================================================================================
+Purpose: Store NBA team information
+
+CREATE TABLE IF NOT EXISTS teams (
+    team_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    team_name VARCHAR(100) NOT NULL UNIQUE,
+    team_abbreviation VARCHAR(5),
+    conference VARCHAR(10) CHECK(conference IN ('Eastern', 'Western')),
+    division VARCHAR(50),
+    city VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create index for faster team lookups
+CREATE INDEX idx_teams_name ON teams(team_name);
+CREATE INDEX idx_teams_abbreviation ON teams(team_abbreviation);
+
+-- Sample Data Insert
+INSERT INTO teams (team_name, team_abbreviation, conference, division, city) VALUES
+    ('Los Angeles Lakers', 'LAL', 'Western', 'Pacific', 'Los Angeles'),
+    ('Boston Celtics', 'BOS', 'Eastern', 'Atlantic', 'Boston'),
+    ('Golden State Warriors', 'GSW', 'Western', 'Pacific', 'San Francisco'),
+    ('Miami Heat', 'MIA', 'Eastern', 'Southeast', 'Miami');
+
+================================================================================
+TABLE 2: DATASETS
+================================================================================
+Purpose: Track imported datasets and their metadata
+
+CREATE TABLE IF NOT EXISTS datasets (
+    dataset_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    dataset_name VARCHAR(255) NOT NULL,
+    description TEXT,
+    season VARCHAR(20),
+    file_name VARCHAR(255),
+    total_games INTEGER DEFAULT 0,
+    import_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR(20) CHECK(status IN ('active', 'archived', 'processing')) DEFAULT 'active',
+    created_by VARCHAR(100),
+    UNIQUE(dataset_name, season)
+);
+
+-- Create index for dataset queries
+CREATE INDEX idx_datasets_season ON datasets(season);
+CREATE INDEX idx_datasets_status ON datasets(status);
+
+-- Sample Data Insert
+INSERT INTO datasets (dataset_name, description, season, file_name, total_games) VALUES
+    ('2023 NBA Regular Season', 'Complete 2023 regular season game data', '2023', 'nba_2023.csv', 1230),
+    ('2022 NBA Regular Season', 'Complete 2022 regular season game data', '2022', 'nba_2022.csv', 1200);
+
+================================================================================
+TABLE 3: GAMES
+================================================================================
+Purpose: Store individual NBA game records with statistics
+
+CREATE TABLE IF NOT EXISTS games (
+    game_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    dataset_id INTEGER NOT NULL,
+    game_date DATE NOT NULL,
+    season VARCHAR(20),
+
+    -- Home Team Information
+    home_team_id INTEGER NOT NULL,
+    home_team_name VARCHAR(100) NOT NULL,
+    home_score INTEGER,
+    home_fg_pct REAL,
+    home_ft_pct REAL,
+    home_fg3_pct REAL,
+    home_rebounds INTEGER,
+    home_assists INTEGER,
+    home_steals INTEGER,
+    home_blocks INTEGER,
+    home_turnovers INTEGER,
+    home_points_in_paint INTEGER,
+
+    -- Away Team Information
+    away_team_id INTEGER NOT NULL,
+    away_team_name VARCHAR(100) NOT NULL,
+    away_score INTEGER,
+    away_fg_pct REAL,
+    away_ft_pct REAL,
+    away_fg3_pct REAL,
+    away_rebounds INTEGER,
+    away_assists INTEGER,
+    away_steals INTEGER,
+    away_blocks INTEGER,
+    away_turnovers INTEGER,
+    away_points_in_paint INTEGER,
+
+    -- Game Result
+    winner VARCHAR(10) CHECK(winner IN ('home', 'away', 'tie')),
+    point_difference INTEGER,
+    overtime BOOLEAN DEFAULT 0,
+
+    -- Metadata
+    venue VARCHAR(100),
+    attendance INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    -- Foreign Keys
+    FOREIGN KEY (dataset_id) REFERENCES datasets(dataset_id) ON DELETE CASCADE,
+    FOREIGN KEY (home_team_id) REFERENCES teams(team_id),
+    FOREIGN KEY (away_team_id) REFERENCES teams(team_id),
+
+    -- Constraints
+    CHECK (home_team_id != away_team_id),
+    CHECK (home_score >= 0 AND away_score >= 0)
+);
+
+-- Create indexes for performance
+CREATE INDEX idx_games_date ON games(game_date);
+CREATE INDEX idx_games_season ON games(season);
+CREATE INDEX idx_games_home_team ON games(home_team_id);
+CREATE INDEX idx_games_away_team ON games(away_team_id);
+CREATE INDEX idx_games_dataset ON games(dataset_id);
+
+-- Sample Data Insert
+INSERT INTO games (
+    dataset_id, game_date, season,
+    home_team_id, home_team_name, home_score, home_fg_pct, home_rebounds, home_assists,
+    away_team_id, away_team_name, away_score, away_fg_pct, away_rebounds, away_assists,
+    winner, point_difference
+) VALUES
+    (1, '2023-10-24', '2023', 1, 'Los Angeles Lakers', 110, 0.475, 45, 25,
+     2, 'Boston Celtics', 105, 0.460, 42, 22, 'home', 5);
+
+================================================================================
+TABLE 4: MODELS
+================================================================================
+Purpose: Store information about trained ML models
+
+CREATE TABLE IF NOT EXISTS models (
+    model_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    model_name VARCHAR(255) NOT NULL,
+    model_type VARCHAR(50) CHECK(model_type IN ('Decision Tree', 'Random Forest', 'Neural Network', 'SVM', 'Other')),
+    description TEXT,
+
+    -- Training Information
+    dataset_id INTEGER NOT NULL,
+    training_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    training_samples INTEGER,
+    test_samples INTEGER,
+
+    -- Model Parameters (stored as JSON string)
+    hyperparameters TEXT,
+
+    -- Model File Path
+    model_file_path VARCHAR(500),
+
+    -- Model Status
+    status VARCHAR(20) CHECK(status IN ('training', 'trained', 'deployed', 'archived')) DEFAULT 'training',
+
+    -- Version Control
+    version VARCHAR(20) DEFAULT '1.0',
+
+    -- Metadata
+    created_by VARCHAR(100),
+    notes TEXT,
+
+    FOREIGN KEY (dataset_id) REFERENCES datasets(dataset_id) ON DELETE CASCADE
+);
+
+-- Create indexes
+CREATE INDEX idx_models_type ON models(model_type);
+CREATE INDEX idx_models_status ON models(status);
+CREATE INDEX idx_models_dataset ON models(dataset_id);
+
+-- Sample Data Insert
+INSERT INTO models (
+    model_name, model_type, description, dataset_id,
+    training_samples, test_samples, hyperparameters,
+    model_file_path, status, version
+) VALUES
+    ('Decision Tree v1.0', 'Decision Tree', 'Initial decision tree classifier', 1,
+     984, 246, '{"max_depth": 10, "min_samples_split": 5}',
+     'models/decision_tree_v1.pkl', 'trained', '1.0'),
+    ('Random Forest v1.0', 'Random Forest', 'Initial random forest classifier', 1,
+     984, 246, '{"n_estimators": 100, "max_depth": 15}',
+     'models/random_forest_v1.pkl', 'trained', '1.0');
+
+================================================================================
+TABLE 5: MODEL_PERFORMANCE
+================================================================================
+Purpose: Store performance metrics for each trained model
+
+CREATE TABLE IF NOT EXISTS model_performance (
+    performance_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    model_id INTEGER NOT NULL,
+
+    -- Performance Metrics
+    accuracy REAL NOT NULL,
+    precision_score REAL,
+    recall_score REAL,
+    f1_score REAL,
+
+    -- Confusion Matrix (stored as JSON or individual fields)
+    true_positives INTEGER,
+    true_negatives INTEGER,
+    false_positives INTEGER,
+    false_negatives INTEGER,
+
+    -- Cross-Validation Results
+    cv_mean_score REAL,
+    cv_std_score REAL,
+
+    -- Dataset Information
+    test_dataset_id INTEGER,
+    evaluation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    -- Additional Metrics (stored as JSON)
+    additional_metrics TEXT,
+
+    FOREIGN KEY (model_id) REFERENCES models(model_id) ON DELETE CASCADE,
+    FOREIGN KEY (test_dataset_id) REFERENCES datasets(dataset_id)
+);
+
+-- Create indexes
+CREATE INDEX idx_performance_model ON model_performance(model_id);
+CREATE INDEX idx_performance_accuracy ON model_performance(accuracy);
+
+-- Sample Data Insert
+INSERT INTO model_performance (
+    model_id, accuracy, precision_score, recall_score, f1_score,
+    true_positives, true_negatives, false_positives, false_negatives
+) VALUES
+    (1, 0.742, 0.735, 0.748, 0.741, 92, 90, 31, 33),
+    (2, 0.789, 0.782, 0.795, 0.788, 98, 96, 25, 27);
+
+================================================================================
+TABLE 6: PREDICTIONS
+================================================================================
+Purpose: Store predictions made by trained models
+
+CREATE TABLE IF NOT EXISTS predictions (
+    prediction_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    model_id INTEGER NOT NULL,
+
+    -- Game Information
+    game_date DATE NOT NULL,
+    home_team_name VARCHAR(100) NOT NULL,
+    away_team_name VARCHAR(100) NOT NULL,
+
+    -- Prediction Results
+    predicted_winner VARCHAR(10) CHECK(predicted_winner IN ('home', 'away')),
+    prediction_confidence REAL CHECK(prediction_confidence BETWEEN 0 AND 1),
+    predicted_score_difference INTEGER,
+
+    -- Input Features (stored as JSON)
+    input_features TEXT,
+
+    -- Actual Result (if available)
+    actual_winner VARCHAR(10) CHECK(actual_winner IN ('home', 'away', 'tie', NULL)),
+    actual_score_home INTEGER,
+    actual_score_away INTEGER,
+
+    -- Prediction Accuracy
+    is_correct BOOLEAN,
+
+    -- Metadata
+    prediction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    verified_date TIMESTAMP,
+
+    FOREIGN KEY (model_id) REFERENCES models(model_id) ON DELETE CASCADE
+);
+
+-- Create indexes
+CREATE INDEX idx_predictions_model ON predictions(model_id);
+CREATE INDEX idx_predictions_date ON predictions(game_date);
+CREATE INDEX idx_predictions_correct ON predictions(is_correct);
+
+-- Sample Data Insert
+INSERT INTO predictions (
+    model_id, game_date, home_team_name, away_team_name,
+    predicted_winner, prediction_confidence, predicted_score_difference
+) VALUES
+    (2, '2024-01-15', 'Los Angeles Lakers', 'Boston Celtics',
+     'home', 0.72, 5),
+    (2, '2024-01-16', 'Golden State Warriors', 'Miami Heat',
+     'away', 0.65, 3);
+
+================================================================================
+TABLE 7: PLAYER_STATISTICS (OPTIONAL - FOR FUTURE ENHANCEMENT)
+================================================================================
+Purpose: Store individual player statistics for advanced predictions
+
+CREATE TABLE IF NOT EXISTS player_statistics (
+    player_stat_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    game_id INTEGER NOT NULL,
+    team_id INTEGER NOT NULL,
+
+    -- Player Information
+    player_name VARCHAR(100) NOT NULL,
+    player_number INTEGER,
+    position VARCHAR(10),
+
+    -- Statistics
+    minutes_played INTEGER,
+    points INTEGER DEFAULT 0,
+    field_goals_made INTEGER DEFAULT 0,
+    field_goals_attempted INTEGER DEFAULT 0,
+    three_pointers_made INTEGER DEFAULT 0,
+    three_pointers_attempted INTEGER DEFAULT 0,
+    free_throws_made INTEGER DEFAULT 0,
+    free_throws_attempted INTEGER DEFAULT 0,
+    rebounds INTEGER DEFAULT 0,
+    assists INTEGER DEFAULT 0,
+    steals INTEGER DEFAULT 0,
+    blocks INTEGER DEFAULT 0,
+    turnovers INTEGER DEFAULT 0,
+    fouls INTEGER DEFAULT 0,
+    plus_minus INTEGER,
+
+    FOREIGN KEY (game_id) REFERENCES games(game_id) ON DELETE CASCADE,
+    FOREIGN KEY (team_id) REFERENCES teams(team_id)
+);
+
+-- Create indexes
+CREATE INDEX idx_player_stats_game ON player_statistics(game_id);
+CREATE INDEX idx_player_stats_player ON player_statistics(player_name);
+
+================================================================================
+TABLE 8: AUDIT_LOG (OPTIONAL - FOR TRACKING CHANGES)
+================================================================================
+Purpose: Track all database operations for security and debugging
+
+CREATE TABLE IF NOT EXISTS audit_log (
+    log_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    table_name VARCHAR(100) NOT NULL,
+    operation VARCHAR(20) CHECK(operation IN ('INSERT', 'UPDATE', 'DELETE')),
+    record_id INTEGER,
+    old_values TEXT,
+    new_values TEXT,
+    changed_by VARCHAR(100),
+    change_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ip_address VARCHAR(50)
+);
+
+-- Create index
+CREATE INDEX idx_audit_table ON audit_log(table_name);
+CREATE INDEX idx_audit_timestamp ON audit_log(change_timestamp);
+
+================================================================================
+VIEWS - FOR SIMPLIFIED QUERIES
+================================================================================
+
+-- View 1: Recent Games with Results
+CREATE VIEW IF NOT EXISTS v_recent_games AS
+SELECT
+    g.game_id,
+    g.game_date,
+    g.season,
+    g.home_team_name,
+    g.home_score,
+    g.away_team_name,
+    g.away_score,
+    g.winner,
+    g.point_difference,
+    d.dataset_name
+FROM games g
+JOIN datasets d ON g.dataset_id = d.dataset_id
+ORDER BY g.game_date DESC;
+
+-- View 2: Model Performance Summary
+CREATE VIEW IF NOT EXISTS v_model_performance AS
+SELECT
+    m.model_id,
+    m.model_name,
+    m.model_type,
+    m.status,
+    mp.accuracy,
+    mp.precision_score,
+    mp.recall_score,
+    mp.f1_score,
+    m.training_date
+FROM models m
+LEFT JOIN model_performance mp ON m.model_id = mp.model_id
+ORDER BY mp.accuracy DESC;
+
+-- View 3: Prediction Accuracy by Model
+CREATE VIEW IF NOT EXISTS v_prediction_accuracy AS
+SELECT
+    m.model_name,
+    m.model_type,
+    COUNT(p.prediction_id) as total_predictions,
+    SUM(CASE WHEN p.is_correct = 1 THEN 1 ELSE 0 END) as correct_predictions,
+    ROUND(AVG(CASE WHEN p.is_correct = 1 THEN 1.0 ELSE 0.0 END) * 100, 2) as accuracy_percentage
+FROM models m
+JOIN predictions p ON m.model_id = p.model_id
+WHERE p.actual_winner IS NOT NULL
+GROUP BY m.model_id, m.model_name, m.model_type;
+
+-- View 4: Team Win/Loss Records
+CREATE VIEW IF NOT EXISTS v_team_records AS
+SELECT
+    team_name,
+    COUNT(*) as total_games,
+    SUM(CASE WHEN (team_name = home_team_name AND winner = 'home')
+              OR (team_name = away_team_name AND winner = 'away')
+         THEN 1 ELSE 0 END) as wins,
+    SUM(CASE WHEN (team_name = home_team_name AND winner = 'away')
+              OR (team_name = away_team_name AND winner = 'home')
+         THEN 1 ELSE 0 END) as losses,
+    ROUND(AVG(CASE WHEN (team_name = home_team_name AND winner = 'home')
+                     OR (team_name = away_team_name AND winner = 'away')
+                THEN 1.0 ELSE 0.0 END) * 100, 2) as win_percentage
+FROM (
+    SELECT home_team_name as team_name, winner FROM games
+    UNION ALL
+    SELECT away_team_name as team_name, winner FROM games
+) team_games
+GROUP BY team_name
+ORDER BY win_percentage DESC;
+
+================================================================================
+TRIGGERS - FOR AUTOMATED OPERATIONS
+================================================================================
+
+-- Trigger 1: Update dataset game count on insert
+CREATE TRIGGER IF NOT EXISTS update_dataset_count_insert
+AFTER INSERT ON games
+BEGIN
+    UPDATE datasets
+    SET total_games = total_games + 1,
+        last_modified = CURRENT_TIMESTAMP
+    WHERE dataset_id = NEW.dataset_id;
+END;
+
+-- Trigger 2: Update dataset game count on delete
+CREATE TRIGGER IF NOT EXISTS update_dataset_count_delete
+AFTER DELETE ON games
+BEGIN
+    UPDATE datasets
+    SET total_games = total_games - 1,
+        last_modified = CURRENT_TIMESTAMP
+    WHERE dataset_id = OLD.dataset_id;
+END;
+
+-- Trigger 3: Calculate point difference on insert
+CREATE TRIGGER IF NOT EXISTS calculate_point_difference
+BEFORE INSERT ON games
+BEGIN
+    UPDATE games
+    SET point_difference = ABS(NEW.home_score - NEW.away_score)
+    WHERE game_id = NEW.game_id;
+END;
+
+-- Trigger 4: Update teams timestamp
+CREATE TRIGGER IF NOT EXISTS update_teams_timestamp
+AFTER UPDATE ON teams
+BEGIN
+    UPDATE teams
+    SET updated_at = CURRENT_TIMESTAMP
+    WHERE team_id = NEW.team_id;
+END;
+
+================================================================================
+USEFUL QUERIES - COMMON OPERATIONS
+================================================================================
+
+-- Query 1: Get all games for a specific team in a season
+/*
+SELECT
+    game_date,
+    home_team_name,
+    home_score,
+    away_team_name,
+    away_score,
+    winner
+FROM games
+WHERE season = '2023'
+  AND (home_team_name = 'Los Angeles Lakers' OR away_team_name = 'Los Angeles Lakers')
+ORDER BY game_date;
+*/
+
+-- Query 2: Get model comparison
+/*
+SELECT
+    m.model_name,
+    m.model_type,
+    mp.accuracy,
+    mp.f1_score,
+    m.training_date
+FROM models m
+JOIN model_performance mp ON m.model_id = mp.model_id
+WHERE m.status = 'trained'
+ORDER BY mp.accuracy DESC;
+*/
+
+-- Query 3: Get prediction accuracy for a specific model
+/*
+SELECT
+    COUNT(*) as total_predictions,
+    SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END) as correct_predictions,
+    ROUND(AVG(CASE WHEN is_correct = 1 THEN 1.0 ELSE 0.0 END) * 100, 2) as accuracy_pct
+FROM predictions
+WHERE model_id = 1
+  AND actual_winner IS NOT NULL;
+*/
+
+-- Query 4: Get recent predictions with verification status
+/*
+SELECT
+    p.game_date,
+    p.home_team_name,
+    p.away_team_name,
+    p.predicted_winner,
+    p.prediction_confidence,
+    p.actual_winner,
+    p.is_correct,
+    m.model_name
+FROM predictions p
+JOIN models m ON p.model_id = m.model_id
+ORDER BY p.game_date DESC
+LIMIT 20;
+*/
+
+-- Query 5: Get home vs away performance
+/*
+SELECT
+    season,
+    SUM(CASE WHEN winner = 'home' THEN 1 ELSE 0 END) as home_wins,
+    SUM(CASE WHEN winner = 'away' THEN 1 ELSE 0 END) as away_wins,
+    COUNT(*) as total_games,
+    ROUND(SUM(CASE WHEN winner = 'home' THEN 1.0 ELSE 0.0 END) / COUNT(*) * 100, 2) as home_win_pct
+FROM games
+GROUP BY season
+ORDER BY season DESC;
+*/
+
+================================================================================
+DATA INTEGRITY CONSTRAINTS
+================================================================================
+
+-- Foreign Key Support (Enable if not already enabled)
+PRAGMA foreign_keys = ON;
+
+-- Additional Constraints
+ALTER TABLE games ADD CONSTRAINT check_positive_scores
+    CHECK (home_score >= 0 AND away_score >= 0);
+
+ALTER TABLE model_performance ADD CONSTRAINT check_valid_metrics
+    CHECK (
+        accuracy BETWEEN 0 AND 1 AND
+        precision_score BETWEEN 0 AND 1 AND
+        recall_score BETWEEN 0 AND 1 AND
+        f1_score BETWEEN 0 AND 1
+    );
+
+================================================================================
+MAINTENANCE QUERIES
+================================================================================
+
+-- Vacuum database (reclaim space)
+VACUUM;
+
+-- Analyze database (update statistics for query optimizer)
+ANALYZE;
+
+-- Check database integrity
+PRAGMA integrity_check;
+
+-- View database size
+-- SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size();
+
+================================================================================
+BACKUP AND RESTORE
+================================================================================
+
+-- Backup Command (SQLite CLI)
+-- .backup 'backup_filename.db'
+
+-- Restore Command (SQLite CLI)
+-- .restore 'backup_filename.db'
+
+-- Python Backup Script
+/*
+import sqlite3
+import shutil
+from datetime import datetime
+
+def backup_database():
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    backup_file = f'nba_predictions_backup_{timestamp}.db'
+    shutil.copy2('nba_predictions.db', backup_file)
+    print(f'Backup created: {backup_file}')
+*/
+
+================================================================================
+DATABASE INITIALIZATION SCRIPT
+================================================================================
+
+-- Complete initialization in order
+/*
+1. Create all tables (in dependency order)
+2. Create indexes
+3. Create views
+4. Create triggers
+5. Insert sample data (optional)
+6. Enable foreign keys
+7. Run ANALYZE
+*/
+
+-- Python Integration Example:
+/*
+import sqlite3
+
+def initialize_database():
+    conn = sqlite3.connect('nba_predictions.db')
+    cursor = conn.cursor()
+
+    # Execute all CREATE TABLE statements
+    # Execute all CREATE INDEX statements
+    # Execute all CREATE VIEW statements
+    # Execute all CREATE TRIGGER statements
+
+    conn.commit()
+    conn.close()
+    print("Database initialized successfully")
+*/
+
+================================================================================
+END OF DATABASE SCHEMA
+================================================================================
+
+Notes:
+- This schema is designed for SQLite but can be adapted for other databases
+- All timestamps use UTC
+- JSON fields are used for flexible storage of complex data
+- Indexes are optimized for common query patterns
+- Views simplify complex queries
+- Triggers maintain data consistency
+- Foreign keys ensure referential integrity
+
+For Production Use:
+- Implement regular backups
+- Monitor database size
+- Optimize queries based on usage patterns
+- Add more indexes as needed
+- Consider partitioning for very large datasets

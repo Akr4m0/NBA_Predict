@@ -1,0 +1,65 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.pytest_cache/
+dist/
+build/
+venv/
+env/
+
+# Database (live DB, WAL sidecars, and timestamped backups — *.db misses these)
+*.db
+*.sqlite
+*.sqlite3
+*.db-wal
+*.db-shm
+data/nba_predictions.db*
+
+# Generated / regenerable data artifacts
+data/models/
+data/uploads/
+data/balldontlie_finals.csv
+
+# Large third-party reference dataset (78 MB external repo, not part of the app)
+NBA-Data-2010-2024-main/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Next.js
+.next/
+out/
+.vercel
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Claude Code
+.claude/
+
+# CSV data files (if you don't want to commit data)
+# data/games.csv
+# data/*.csv
+
+# Keep database structure but ignore data
+# data/nba_predictions.db
+
+# Environment variables
+.env
+.env.local
+.env.production.local
+.env.development.local
+
+# Logs
+*.log
