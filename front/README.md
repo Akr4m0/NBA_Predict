@@ -86,6 +86,7 @@ front/
 │   │   ├── Import.tsx     # Data import
 │   │   ├── Train.tsx      # Model training
 │   │   ├── Predictions.tsx # View predictions
+│   │   ├── Leaderboard.tsx # User prediction leaderboard
 │   │   ├── Analysis.tsx   # Performance analysis
 │   │   ├── Verify.tsx     # Verification
 │   │   └── About.tsx      # About page
@@ -133,9 +134,11 @@ front/
 
 ## Connecting to Backend
 
-The frontend is designed to work with the Python backend API. Update API endpoints in the configuration to connect to your backend server.
+The frontend talks to the FastAPI backend. Set the API base URL with
+`VITE_API_BASE_URL`; it is compiled into the bundle at build time, so changing
+it requires a rebuild.
 
-Default backend URL: `http://localhost:8050` (Python Dash dashboard) or your custom API server.
+Default backend URL: `http://localhost:8000` (Swagger docs at `/docs`).
 
 ## Deployment
 
@@ -165,8 +168,7 @@ docker run -p 8080:8080 nba-prediction-frontend
 Create a `.env` file in the root directory:
 
 ```env
-VITE_API_URL=http://localhost:5000
-VITE_DASHBOARD_URL=http://localhost:8050
+VITE_API_BASE_URL=http://localhost:8000
 ```
 
 ## Contributing

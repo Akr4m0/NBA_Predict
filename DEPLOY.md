@@ -1,7 +1,7 @@
 # Deployment Guide
 
 Practical steps to run NBA Predict in production. For architecture/dev, see
-`CLAUDE.md`.
+[`README.md`](README.md).
 
 ---
 

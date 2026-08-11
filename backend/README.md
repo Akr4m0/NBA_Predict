@@ -1,7 +1,8 @@
 # NBA Prediction Backend
 
-FastAPI + scikit-learn + SQLite. See [`../CLAUDE.md`](../CLAUDE.md) for the
-full architecture overview, feature list, accuracy table, and deployment story.
+FastAPI + scikit-learn + SQLite. See [`../README.md`](../README.md) for the
+architecture overview and feature list, and [`../DEPLOY.md`](../DEPLOY.md) for
+the deployment story.
 
 ## Quick start
 
@@ -15,7 +16,7 @@ python3 -m uvicorn api:app --port 8000 --reload
 
 ```bash
 python3 -m pytest tests/
-# 44 tests, tmp DB, never touches data/nba_predictions.db.
+# 78 tests, tmp DB, never touches data/nba_predictions.db.
 ```
 
 ## Environment variables

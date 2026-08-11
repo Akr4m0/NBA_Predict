@@ -1,450 +1,143 @@
 # NBA Game Prediction System
 
-> Machine Learning-powered NBA game prediction platform with professional analytics
+Predicts the winner of NBA games from pre-game information only. A FastAPI +
+scikit-learn backend trains and serves the models; a React single-page app
+handles import, training, prediction, and verification.
 
-A comprehensive full-stack application for predicting NBA game outcomes using advanced machine learning algorithms. Features a Python backend with multiple ML models and a modern React frontend with a dark, elegant design.
+Built as the software component of a diploma thesis.
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
-![Python](https://img.shields.io/badge/python-3.8+-green.svg)
-![React](https://img.shields.io/badge/react-18.3-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
+## Stack
 
----
+| Layer | Technology |
+|---|---|
+| Backend | FastAPI, scikit-learn, XGBoost, pandas, SQLite (WAL) |
+| Frontend | React 18, TypeScript, Vite, Tailwind, shadcn/ui, Recharts, Framer Motion |
+| Serving | uvicorn (`:8000`), nginx (`:8080`), Docker Compose |
 
-## 🎯 Features
+## Quick start
 
-### Backend (Python)
-- **Multiple ML Models**: Decision Tree, Random Forest, XGBoost, Baseline
-- **Data Import**: CSV/Excel file support with automatic cleaning
-- **Performance Evaluation**: Accuracy, Precision, Recall, F1-Score
-- **Interactive Dashboard**: Dash-based web visualization
-- **Prediction Verification**: Compare predictions with actual results
-- **CLI Interface**: Complete command-line tool
-
-### Frontend (React)
-- **Modern UI**: Dark theme with glassmorphism effects
-- **9 Pages**: Home, Dashboard, Import, Train, Predictions, Analysis, Verify, About
-- **Responsive Design**: Mobile, tablet, and desktop support
-- **Smooth Animations**: Framer Motion throughout
-- **Data Visualization**: Recharts for performance charts
-- **Professional Design**: Subtle, elegant, Flashscore-inspired
-
----
-
-## 📁 Project Structure
-
-```
-NBA_Prediction_Decision_tree/
-├── backend/                  # Python ML backend
-│   ├── nba_predictor.py     # Main CLI application
-│   ├── database.py          # SQLite database operations
-│   ├── data_importer.py     # Data import and cleaning
-│   ├── predictive_models.py # ML models
-│   ├── performance_evaluator.py # Model evaluation
-│   ├── dashboard.py         # Dash dashboard
-│   ├── requirements.txt     # Python dependencies
-│   └── README.md            # Backend documentation
-│
-├── front/                    # React frontend
-│   ├── src/
-│   │   ├── pages/           # 9 page components
-│   │   ├── components/      # Reusable components
-│   │   ├── hooks/           # Custom hooks
-│   │   └── lib/             # Utilities
-│   ├── package.json         # Node dependencies
-│   ├── README.md            # Frontend documentation
-│   └── SETUP_GUIDE.md       # Setup instructions
-│
-├── data/                     # Data files and database
-│   ├── games.csv            # Sample NBA game data
-│   └── nba_predictions.db   # SQLite database
-│
-├── docs/                     # Documentation
-│   ├── PROJECT_DOCUMENTATION.txt  # Complete project docs
-│   ├── FRONTEND_REVIEW.md         # Frontend verification
-│   ├── DATABASE_SCHEMA.txt        # Database structure
-│   ├── INTEGRATION_SUMMARY.md     # Integration guide
-│   ├── NEW_FEATURES.md            # Feature documentation
-│   ├── PRESENTATION_CONTENT.txt   # Presentation material
-│   └── warnings_guide.md          # Development notes
-│
-├── .gitignore
-└── README.md                 # This file
-```
-
----
-
-## 🚀 Quick Start
-
-### Backend Setup
+Docker Compose is the supported path:
 
 ```bash
-# 1. Navigate to backend
-cd backend
-
-# 2. Install dependencies
-pip install -r requirements.txt
-
-# 3. Import data
-python nba_predictor.py import ../data/games.csv --description "NBA 2023 Season"
-
-# 4. Train models
-python nba_predictor.py train 1
-
-# 5. Launch dashboard
-python nba_predictor.py dashboard
+cp .env.example .env      # fill in keys; .env is gitignored
+docker compose build
+docker compose up -d
 ```
 
-Visit: `http://localhost:8050`
+- Frontend → http://localhost:8080
+- API + Swagger docs → http://localhost:8000/docs
 
-### Frontend Setup
+Then open `/import` to upload `data/games.csv`, and `/train` to fit the models.
+
+Running without Docker:
 
 ```bash
-# 1. Navigate to frontend
-cd front
+# Backend
+cd backend && pip install -r requirements.txt
+python3 -m uvicorn api:app --port 8000 --reload
 
-# 2. Install dependencies
-npm install
-# or
-bun install
-
-# 3. Start development server
+# Frontend
+cd front && npm ci
 npm run dev
-# or
-bun run dev
 ```
 
-Visit: `http://localhost:8080`
+See [DEPLOY.md](DEPLOY.md) for production configuration, backups, the deploy
+smoke test, and known limitations.
 
----
+## Project layout
 
-## 📊 Usage Examples
+```
+backend/
+  api.py                    FastAPI app — 17 endpoints, API-key auth, rate limiting
+  database.py               SQLite schema, migrations, WAL handling
+  data_importer.py          CSV/Excel ingest, column mapping, validation, cleaning
+  predictive_models.py      Feature engineering, training, calibration, prediction
+  balldontlie_client.py     External scores feed client
+  data_freshness.py         Fetch → import → retrain → promote → resolve pipeline
+  team_locations.py         Arena coordinates and team-ID mapping
+  backfill_freshness.py     One-shot backfill over past seasons
+  export_balldontlie_csv.py Regenerate the combined CSV
+  backup_db.py              WAL-safe database snapshot
+  tests/                    78 pytest tests
 
-### Import NBA Data
+front/
+  src/pages/                Home, Dashboard, Import, Train, Predictions,
+                            Leaderboard, Analysis, Verify, About
+  src/components/           UI components (shadcn/ui)
+  src/lib/                  API client, team data, utilities (20 vitest tests)
+
+data/
+  games.csv                 Historical game data
+  Games_most_recent.csv     Extended dataset through the 2026 Finals
+
+docs/                       Database schema and design notes
+```
+
+## Models
+
+Four classifiers are trained and compared:
+
+- **Decision Tree** — interpretable decision paths, used for feature-importance readouts
+- **Random Forest** — bagged ensemble, the default recommendation
+- **XGBoost** — gradient boosting
+- **Baseline** — most-frequent-class predictor, the benchmark the others must beat
+
+Probabilities are calibrated with `CalibratedClassifierCV`. Evaluation uses
+`TimeSeriesSplit` rather than random k-fold, so no future game is ever used to
+predict a past one.
+
+## Features
+
+Features are derived strictly from information available **before tip-off** —
+team identity and encoding, temporal fields (month, day of week, season),
+rolling form and win/loss streaks, rest days, home-court advantage, and
+travel distance between arenas.
+
+Post-game box-score statistics are deliberately excluded from the feature set.
+[docs/LEAKAGE_INVESTIGATION.md](docs/LEAKAGE_INVESTIGATION.md) documents a
+latent leakage trap found during development and how it was removed.
+
+## Frontend routes
+
+| Route | Purpose |
+|---|---|
+| `/` | Landing page |
+| `/dashboard` | Overview and navigation hub |
+| `/import` | Upload and validate CSV/Excel datasets |
+| `/train` | Configure and train models |
+| `/predictions` | Generate and browse game predictions |
+| `/leaderboard` | User prediction leaderboard |
+| `/analysis` | Model performance charts and feature importances |
+| `/verify` | Compare predictions against actual results |
+| `/about` | Project information |
+
+## Configuration
+
+Set in `.env` (see `.env.example`):
+
+| Variable | Purpose |
+|---|---|
+| `NBA_API_KEY` | If set, required as `X-API-Key` on mutating endpoints |
+| `NBA_CORS_ORIGINS` | Comma-separated allowed browser origins |
+| `BALLDONTLIE_API_KEY` | Scores feed for the data-freshness pipeline |
+| `VITE_API_BASE_URL` | API URL, compiled into the SPA **at build time** |
+| `NBA_DB_PATH` | SQLite path (default `../data/nba_predictions.db`) |
+
+## Tests
 
 ```bash
-cd backend
-python nba_predictor.py import ../data/games.csv --description "2023 Season"
+cd backend && python3 -m pytest tests/    # 78 tests
+cd front && npx vitest run                # 20 tests
 ```
 
-### Train All Models
-
-```bash
-python nba_predictor.py train 1 --models decision_tree random_forest xgboost
-```
-
-### Compare Model Performance
-
-```bash
-python nba_predictor.py compare
-```
-
-### One-Command Workflow
-
-```bash
-python nba_predictor.py auto ../data/games.csv --description "Quick Test"
-```
-
----
-
-## 🧠 Machine Learning Models
-
-### 1. Decision Tree Classifier
-- Interpretable decision paths
-- Feature importance analysis
-- Good baseline performance
-
-### 2. Random Forest Classifier
-- Ensemble of multiple trees
-- Higher accuracy and robustness
-- Reduced overfitting
-
-### 3. XGBoost (Gradient Boosting)
-- State-of-the-art performance
-- Advanced gradient boosting
-- Handles complex patterns
-
-### 4. Baseline Model
-- Simple majority predictor
-- Performance benchmark
-
----
-
-## 📈 Feature Engineering
-
-The system automatically creates these features:
-
-- **Team Encoding**: Numerical representation of teams
-- **Temporal Features**: Month, day of week, day of year
-- **Season Features**: Season identifiers
-- **Statistical Features**: FG%, rebounds, assists, etc.
-- **Historical Features**: Win/loss records, streaks
-- **Score Features**: Point differentials
-- **Location Features**: Home/away advantages
-
----
-
-## 🎨 Design System (Frontend)
-
-### Colors
-- **Background**: `#0a0f1c` (Deep navy)
-- **Primary Accent**: `#ff6b00` (Orange)
-- **Secondary Accent**: `#3b82f6` (Blue)
-- **Success**: `#10b981` (Green)
-- **Text**: `#ffffff` (White) with gray variants
-
-### Typography
-- Bold headings with wide tracking
-- Clean sans-serif body text
-- Monospace for data/statistics
-
-### Effects
-- Glassmorphism: `backdrop-blur-md bg-white/5`
-- Smooth animations: Framer Motion (0.3-0.6s)
-- Hover glows and scale effects
-- Gradient text accents
-
----
-
-## 📦 Dependencies
-
-### Backend (Python)
-```
-pandas
-numpy
-scikit-learn
-xgboost
-dash
-plotly
-openpyxl
-```
-
-### Frontend (React)
-```
-react, react-dom, react-router-dom
-typescript
-vite
-tailwindcss
-framer-motion
-recharts
-lucide-react
-shadcn/ui components
-react-hook-form
-zod
-```
-
----
-
-## 🗄️ Database Schema
-
-SQLite database with 4 main tables:
-
-1. **import_records**: Track data imports
-2. **models**: Store trained model metadata
-3. **prediction_results**: Performance metrics
-4. **game_data**: Historical NBA games
-
-See `docs/DATABASE_SCHEMA.txt` for details.
-
----
-
-## 📝 Available Commands (Backend)
-
-| Command | Description | Example |
-|---------|-------------|---------|
-| `import` | Import historical data | `python nba_predictor.py import data.csv` |
-| `train` | Train models | `python nba_predictor.py train 1` |
-| `compare` | Compare models | `python nba_predictor.py compare` |
-| `list` | List datasets | `python nba_predictor.py list` |
-| `report` | Generate report | `python nba_predictor.py report 1` |
-| `dashboard` | Launch dashboard | `python nba_predictor.py dashboard` |
-| `auto` | Import + train + compare | `python nba_predictor.py auto data.csv` |
-
----
-
-## 🌐 Frontend Pages
-
-| Route | Page | Description |
-|-------|------|-------------|
-| `/` | Home | Hero section with features |
-| `/dashboard` | Dashboard | Main navigation hub |
-| `/import` | Import Data | Upload CSV/Excel files |
-| `/train` | Train Models | Configure and train ML models |
-| `/predictions` | Predictions | View game predictions |
-| `/analysis` | Analysis | Model performance charts |
-| `/verify` | Verification | Compare with actual results |
-| `/about` | About | Project information |
-
----
-
-## 🔧 Configuration
-
-### Backend Configuration
-
-Default database location: `../data/nba_predictions.db`
-
-Override with:
-```bash
-python nba_predictor.py --db /custom/path/database.db
-```
-
-### Frontend Configuration
-
-Create `.env` file in `/front`:
-```env
-VITE_API_URL=http://localhost:5000
-VITE_DASHBOARD_URL=http://localhost:8050
-```
-
----
-
-## 🚢 Deployment
-
-### Backend
-```bash
-cd backend
-pip install -r requirements.txt
-python nba_predictor.py dashboard --port 8050
-```
-
-### Frontend
-
-**Vercel:**
-```bash
-cd front
-npm run build
-vercel --prod
-```
-
-**Netlify:**
-```bash
-cd front
-npm run build
-# Deploy dist/ folder
-```
-
-**Docker:**
-```bash
-cd front
-docker build -t nba-prediction-frontend .
-docker run -p 8080:8080 nba-prediction-frontend
-```
-
----
-
-## 📚 Documentation
-
-- **[Backend README](backend/README.md)** - Backend usage guide
-- **[Frontend README](front/README.md)** - Frontend documentation
-- **[Frontend Setup Guide](front/SETUP_GUIDE.md)** - Detailed setup
-- **[Project Documentation](docs/PROJECT_DOCUMENTATION.txt)** - Complete specs
-- **[Frontend Review](docs/FRONTEND_REVIEW.md)** - Verification report
-- **[Database Schema](docs/DATABASE_SCHEMA.txt)** - Database structure
-
----
-
-## 🧪 Testing
-
-### Backend
-```bash
-cd backend
-python -m pytest  # If tests are added
-```
-
-### Frontend
-```bash
-cd front
-npm run test
-```
-
----
-
-## 🐛 Troubleshooting
-
-### Backend Issues
-
-**"ModuleNotFoundError"**
-```bash
-pip install -r requirements.txt
-```
-
-**"Database locked"**
-- Close other connections to the database
-- Ensure only one process is writing
-
-### Frontend Issues
-
-**Dependencies won't install**
-```bash
-npm cache clean --force
-rm package-lock.json
-npm install
-```
-
-**Port 8080 already in use**
-- Change port in `vite.config.ts` or:
-```bash
-npm run dev -- --port 3000
-```
-
----
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
----
-
-## 📄 License
-
-This project is open source and available under the MIT License.
-
----
-
-## 🎯 Future Enhancements
-
-See `docs/PROJECT_DOCUMENTATION.txt` for comprehensive list of planned features:
-
-- Neural Networks & Deep Learning
-- Live game predictions
-- Player-level analysis
-- User accounts & profiles
-- Betting integration
-- Mobile app
-- Multi-sport expansion
-
----
-
-## 📞 Support
-
-For issues or questions:
-- Check documentation in `/docs`
-- Review troubleshooting sections
-- Check backend/frontend README files
-
----
-
-## ⚡ Performance
-
-- **Backend**: SQLite for fast queries
-- **Frontend**: Code splitting, lazy loading, optimized images
-- **Models**: Efficient feature engineering and caching
-
----
-
-## 🔒 Security
-
-- No hardcoded credentials
-- Environment variables for sensitive data
-- Input validation on data import
-- CORS configuration for API
-
----
-
-**Built with Python, React, and Machine Learning for professional NBA game predictions.**
-
-*Version 1.0.0 - January 2026*
+Backend tests run against a temporary database and never touch
+`data/nba_predictions.db`.
+
+## Documentation
+
+- [DEPLOY.md](DEPLOY.md) — production deployment, backups, limitations
+- [backend/README.md](backend/README.md) — backend usage and environment variables
+- [front/README.md](front/README.md) — frontend development notes
+- [docs/DATABASE_SCHEMA.txt](docs/DATABASE_SCHEMA.txt) — table definitions
+- [docs/LEAKAGE_INVESTIGATION.md](docs/LEAKAGE_INVESTIGATION.md) — leakage case study
+- [docs/PHASE9_RESEARCH.md](docs/PHASE9_RESEARCH.md) — design decisions

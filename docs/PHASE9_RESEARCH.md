@@ -90,7 +90,7 @@ resolved (bool), actual_label, correct (bool)`.
 - **SQLite write concurrency.** Single-file SQLite + user-prediction writes + a resolution job + training all writing = classic contention. **WAL mode is the minimum**; Postgres is the real production answer. Flag now.
 - **Migrations.** New `predictions`/`users` tables stretch the `ALTER TABLE try/except` pattern past comfort — adopt a real migration step (even a lightweight versioned one).
 - **Identity model.** A leaderboard needs distinguishable users; the shared `X-API-Key` does not identify anyone. Options: (a) lightweight **handle/nickname** MVP — fine for a demo; (b) real auth (sessions/JWT) — needed for a *competitive* leaderboard (else people spoof handles). Decision.
-- **Secret management** for the external data-API key — separate from `NBA_API_KEY`; never bake into the frontend image (the `front/Dockerfile` `VITE_*` foot-gun already noted in CLAUDE.md).
+- **Secret management** for the external data-API key — separate from `NBA_API_KEY`; never bake into the frontend image (the `front/Dockerfile` `VITE_*` foot-gun already noted in `DEPLOY.md`).
 - Deferred but noted: structured logging/observability, healthcheck depth, backups for the new tables, CI.
 
 ---

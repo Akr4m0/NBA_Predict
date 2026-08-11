@@ -17,8 +17,8 @@ def test_prepare_features_produces_expected_columns(db, sample_games_df):
     pm = PredictiveModels(db=db)
     features, target = pm.prepare_features(sample_games_df)
 
-    # All 34 features documented in CLAUDE.md must be present — equality, not
-    # subset, so a regression that drops a feature is caught.
+    # All 34 pre-game features must be present — equality, not subset, so a
+    # regression that drops a feature is caught.
     expected = {
         # Identity / calendar (6)
         "home_team_encoded", "away_team_encoded", "season_encoded",

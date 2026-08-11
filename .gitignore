@@ -63,3 +63,6 @@ out/
 
 # Logs
 *.log
+
+# Personal thesis-writing notes — kept locally, not published
+docs/THESIS_GUIDE.md
