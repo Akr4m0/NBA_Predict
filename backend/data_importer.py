@@ -192,6 +192,14 @@ class DataImporter:
             # Game ID (used to derive season_type from its leading digit)
             'GAME_ID': 'game_id',
             'Game ID': 'game_id',
+            'gameId': 'game_id',
+
+            # Games_most_recent.csv column names
+            'hometeamId': 'home_team',
+            'awayteamId': 'away_team',
+            'gameDate': 'game_date',
+            'homeScore': 'home_score',
+            'awayScore': 'away_score',
 
             # Box-score stats (preserved in DB for pre-game rolling features)
             'FG_PCT_home': 'fg_pct_home',
