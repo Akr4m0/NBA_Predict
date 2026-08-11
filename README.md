@@ -70,7 +70,7 @@ data/
   games.csv                 Historical game data
   Games_most_recent.csv     Extended dataset through the 2026 Finals
 
-docs/                       Database schema and design notes
+docs/                       Design notes and the leakage case study
 ```
 
 ## Models
@@ -88,12 +88,27 @@ predict a past one.
 
 ## Features
 
-Features are derived strictly from information available **before tip-off** —
-team identity and encoding, temporal fields (month, day of week, season),
-rolling form and win/loss streaks, rest days, home-court advantage, and
-travel distance between arenas.
+All 34 features are derived strictly from information available **before
+tip-off**:
 
-Post-game box-score statistics are deliberately excluded from the feature set.
+| Family | n | Examples |
+|---|---|---|
+| Identity & calendar | 6 | team encodings, season, month, day of week |
+| Rolling form | 3 | last-5 win rate per side, head-to-head rate |
+| Elo | 3 | `home_elo_pre`, `away_elo_pre`, `elo_diff` |
+| Rest | 5 | rest days, back-to-back flags, rest differential |
+| Venue | 2 | home win rate at home, away win rate on the road |
+| Box-score rolling | 10 | last-10 means of FG%, FT%, 3P%, assists, rebounds |
+| Travel & circadian | 4 | travel distance, time-zone shift |
+| Season type | 1 | `is_playoff` |
+
+Box-score statistics enter **only** as rolling means over a team's *previous*
+games — a game's own box score is never a feature, since those numbers exist
+only after the result is known. `test_prepare_features_produces_expected_columns`
+asserts set equality on all 34, so silently dropping or adding one fails the
+suite, and `test_rolling_winrate_does_not_leak_future` pins the rolling
+windows to strictly past games.
+
 [docs/LEAKAGE_INVESTIGATION.md](docs/LEAKAGE_INVESTIGATION.md) documents a
 latent leakage trap found during development and how it was removed.
 
@@ -138,6 +153,5 @@ Backend tests run against a temporary database and never touch
 - [DEPLOY.md](DEPLOY.md) — production deployment, backups, limitations
 - [backend/README.md](backend/README.md) — backend usage and environment variables
 - [front/README.md](front/README.md) — frontend development notes
-- [docs/DATABASE_SCHEMA.txt](docs/DATABASE_SCHEMA.txt) — table definitions
 - [docs/LEAKAGE_INVESTIGATION.md](docs/LEAKAGE_INVESTIGATION.md) — leakage case study
 - [docs/PHASE9_RESEARCH.md](docs/PHASE9_RESEARCH.md) — design decisions
